@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-primary: var(--primary);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base Theme - Deep Dark Mode */
+:root {
+  --background: #0F1115;
+  --foreground: #f3f4f6; /* Gray 100 */
+  --primary: #0ea5e9; /* Light Blue 500 */
+  --primary-rgb: 14, 165, 233;
+}
+
+/* Quant Persona Theme */
+.theme-quant {
+  --primary: #00FF9D; /* Electric Green */
+  --primary-rgb: 0, 255, 157;
+}
+
+/* Generalist Persona Theme */
+.theme-generalist {
+  --primary: #FF9500; /* Vibrant Amber */
+  --primary-rgb: 255, 149, 0;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS zoom on double-tap globally */
+* {
+  touch-action: manipulation;
+}
+
+/* Custom scrollbar for Webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* CSS keyframe shake for incorrect answers — GPU-accelerated via transform */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 50%, 90% { transform: translateX(-10px); }
+  30%, 70% { transform: translateX(10px); }
+}
+
+.animate-shake {
+  animation: shake 0.25s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-[#16191E] border border-white/5 backdrop-blur-md rounded-xl;
+  }
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.5);
+    border-color: rgba(var(--primary-rgb), 0.5);
+  }
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
 }
