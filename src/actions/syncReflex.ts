@@ -28,53 +28,52 @@ export async function syncReflexSession(payload: SyncPayload) {
     }
     
     let totalPointsEarned = 0;
-
-    // We don't use a strict transaction for the card logs to avoid timeouts
-    // Instead we process them in parallel.
-    await Promise.all(logs.map(async (log) => {
-      // 1. Insert Velocity Log
-      await prisma.reflexVelocityLogs.create({
-        data: {
-          reflexProfileId: profile.id,
-          cardId: log.cardId,
-          timeMs: log.timeMs,
-          quality: log.quality,
-        },
-      });
-
-      // 2. Upsert User Progress (SM-2 parameters)
-      await prisma.userReflexProgress.upsert({
-        where: {
-          reflexProfileId_cardId: {
-            reflexProfileId: profile.id,
-            cardId: log.cardId,
-          },
-        },
-        update: {
-          ef: log.newEf,
-          interval: log.newInterval,
-          consecutiveHit: log.newConsecutiveHit,
-          nextReview: new Date(Date.now() + log.newInterval * 60 * 1000), // Add minutes
-        },
-        create: {
-          reflexProfileId: profile.id,
-          cardId: log.cardId,
-          ef: log.newEf,
-          interval: log.newInterval,
-          consecutiveHit: log.newConsecutiveHit,
-          nextReview: new Date(Date.now() + log.newInterval * 60 * 1000),
-        },
-      });
-      
-      // Calculate points based on quality
+    logs.forEach(log => {
       if (log.quality === 5) totalPointsEarned += 10;
       else if (log.quality === 4) totalPointsEarned += 7;
       else if (log.quality === 3) totalPointsEarned += 5;
       else if (log.quality === 1) totalPointsEarned += 1;
-    }));
-      
-    // 3. Streak & ARV & Level Progression logic (Single isolated transaction)
+    });
+
+    // Run all database updates in a single pipelined transaction to eliminate latency
     await prisma.$transaction(async (tx) => {
+      // 1. Bulk insert velocity logs
+      await tx.reflexVelocityLogs.createMany({
+        data: logs.map(log => ({
+          reflexProfileId: profile.id,
+          cardId: log.cardId,
+          timeMs: log.timeMs,
+          quality: log.quality,
+        }))
+      });
+
+      // 2. Parallelize Upserts for SM-2 Progress within the same transaction
+      await Promise.all(logs.map(log => 
+        tx.userReflexProgress.upsert({
+          where: {
+            reflexProfileId_cardId: {
+              reflexProfileId: profile.id,
+              cardId: log.cardId,
+            },
+          },
+          update: {
+            ef: log.newEf,
+            interval: log.newInterval,
+            consecutiveHit: log.newConsecutiveHit,
+            nextReview: new Date(Date.now() + log.newInterval * 60 * 1000),
+          },
+          create: {
+            reflexProfileId: profile.id,
+            cardId: log.cardId,
+            ef: log.newEf,
+            interval: log.newInterval,
+            consecutiveHit: log.newConsecutiveHit,
+            nextReview: new Date(Date.now() + log.newInterval * 60 * 1000),
+          },
+        })
+      ));
+      
+      // 3. Streak & ARV & Level Progression logic
       const userDoc = await tx.user.findUnique({ where: { id: userId }, include: { settings: true } });
       if (userDoc) {
         const today = new Date();
@@ -109,9 +108,7 @@ export async function syncReflexSession(payload: SyncPayload) {
 
         // Progression check
         let newLevel = userDoc.settings?.operationLevel || 1;
-        // If they average under 1.5 seconds and had a good streak, we can auto-level them
         if (newArv > 0 && newArv < 1500 && newLevel < 10) {
-           // We'll require at least 50 points total to prevent instant jumping
            if (userDoc.totalPoints + totalPointsEarned > newLevel * 100) {
               newLevel += 1;
            }

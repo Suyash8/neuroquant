@@ -53,35 +53,58 @@ export default async function SessionPage() {
   if (initialQuestions.length < SESSION_SIZE) {
     const cardsNeeded = SESSION_SIZE - initialQuestions.length;
     
-    // Generate new cards on the fly
+    // 1. Generate all new questions in memory
+    const generatedQuestions = [];
     for (let i = 0; i < cardsNeeded; i++) {
-      const generated = generateMathQuestion(operationLevel, commutativity);
-      
-      // Upsert into ReflexCard table to maintain ID constraints for velocity logs
-      let cardRecord = await prisma.reflexCard.findFirst({
-        where: { question: generated.question }
-      });
-      
-      if (!cardRecord) {
-        cardRecord = await prisma.reflexCard.create({
-          data: {
-            question: generated.question,
-            answer: generated.answer,
-            category: generated.category,
-            difficulty: operationLevel,
-          }
-        });
-      }
+      generatedQuestions.push(generateMathQuestion(operationLevel, commutativity));
+    }
+    
+    const questionStrings = generatedQuestions.map(q => q.question);
 
+    // 2. Fetch existing cards in bulk
+    const existingCards = await prisma.reflexCard.findMany({
+      where: { question: { in: questionStrings } }
+    });
+
+    const existingQuestionStrings = new Set(existingCards.map(c => c.question));
+    
+    // 3. Prepare missing cards for creation
+    const missingCards = generatedQuestions.filter(q => !existingQuestionStrings.has(q.question));
+    
+    // 4. Create missing cards in bulk (skip duplicates just in case)
+    if (missingCards.length > 0) {
+      await prisma.reflexCard.createMany({
+        data: missingCards.map(c => ({
+          question: c.question,
+          answer: c.answer,
+          category: c.category,
+          difficulty: operationLevel,
+        })),
+        skipDuplicates: true
+      });
+    }
+
+    // 5. Fetch all required cards again to get their IDs
+    const finalCards = await prisma.reflexCard.findMany({
+      where: { question: { in: questionStrings } }
+    });
+
+    // Populate the queue
+    for (const card of finalCards) {
+      // Don't add if already in initialQuestions (shouldn't happen since we subtracted cardsNeeded, but just in case)
+      if (initialQuestions.find(iq => iq.cardId === card.id)) continue;
+      
       initialQuestions.push({
         id: crypto.randomUUID(), // transient ID for the store
-        cardId: cardRecord.id,
-        question: cardRecord.question,
-        answer: cardRecord.answer,
+        cardId: card.id,
+        question: card.question,
+        answer: card.answer,
         ef: 2.5,
         interval: 0,
         consecutiveHit: 0
       });
+
+      if (initialQuestions.length >= SESSION_SIZE) break;
     }
   }
 

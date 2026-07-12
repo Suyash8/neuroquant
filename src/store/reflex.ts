@@ -100,7 +100,8 @@ export const useReflexSessionStore = create<ReflexSessionState>((set, get) => ({
     set({ isActive: false, startTime: null });
 
     if (userId && logs.length > 0) {
-      await syncReflexSession({ userId, logs });
+      // Fire and forget to prevent blocking the UI
+      syncReflexSession({ userId, logs }).catch(console.error);
     }
   },
 
