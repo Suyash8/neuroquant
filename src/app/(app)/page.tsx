@@ -3,14 +3,15 @@ import { Brain, Flame, Target, Trophy, Activity, ArrowRight, Star, Zap } from "l
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { DashboardGraph } from "./DashboardGraph";
+import { withPerf } from "@/lib/perf";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
   if (!user) return null;
 
-  const dbUser = await prisma.user.findUnique({
+  const dbUser = await withPerf("Prisma: User Data (findUnique)", () => prisma.user.findUnique({
     where: { id: user.id },
     include: {
       reflexProfile: true,
@@ -20,38 +21,38 @@ export default async function DashboardPage() {
         take: 5
       }
     }
-  });
+  }));
 
   if (!dbUser) return null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const cardsDoneTodayCount = await prisma.reflexVelocityLogs.count({
-    where: {
-      reflexProfileId: dbUser.reflexProfile?.id,
-      createdAt: { gte: today }
-    }
-  });
-
-  const userSettings = await prisma.userSettings.findUnique({ where: { userId: user.id } });
-  
-  const dailyGoal = userSettings?.dailyGoal || 50; 
-  const progressPct = Math.min(100, Math.round((cardsDoneTodayCount / dailyGoal) * 100));
-
-  // Query 7 day trailing velocity
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  const velocityLogs = await prisma.reflexVelocityLogs.findMany({
-    where: {
-      reflexProfileId: dbUser.reflexProfile?.id,
-      createdAt: { gte: sevenDaysAgo }
-    },
-    select: { createdAt: true, timeMs: true },
-    orderBy: { createdAt: "asc" }
-  });
+  // Parallelize secondary queries
+  const [cardsDoneTodayCount, userSettings, velocityLogs] = await withPerf("Prisma: Parallel Stats Fetch", () => Promise.all([
+    prisma.reflexVelocityLogs.count({
+      where: {
+        reflexProfileId: dbUser.reflexProfile?.id,
+        createdAt: { gte: today }
+      }
+    }),
+    prisma.userSettings.findUnique({ where: { userId: user.id } }),
+    prisma.reflexVelocityLogs.findMany({
+      where: {
+        reflexProfileId: dbUser.reflexProfile?.id,
+        createdAt: { gte: sevenDaysAgo }
+      },
+      select: { createdAt: true, timeMs: true },
+      orderBy: { createdAt: "asc" }
+    })
+  ]));
+
+  const dailyGoal = userSettings?.dailyGoal || 50; 
+  const progressPct = Math.min(100, Math.round((cardsDoneTodayCount / dailyGoal) * 100));
 
   // Aggregate by day
   const dailyVelocityMap = new Map<string, { sum: number, count: number }>();

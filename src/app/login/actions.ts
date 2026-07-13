@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import prisma from '@/lib/prisma'
+import { withPerf } from '@/lib/perf'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { error } = await withPerf("Supabase Auth (signIn)", () => supabase.auth.signInWithPassword(data))
 
   if (error) {
     return redirect('/login?error=' + error.message)
@@ -31,19 +32,20 @@ export async function signup(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error, data: authData } = await supabase.auth.signUp(data)
+  const { error, data: authData } = await withPerf("Supabase Auth (signUp)", () => supabase.auth.signUp(data))
 
   if (error) {
     return redirect('/login?error=' + error.message)
   }
 
   if (authData.user) {
+    const userId = authData.user.id;
     // Create the Prisma User record to match the Auth User
-    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+    const existingUser = await withPerf("Prisma Auth (findUnique)", () => prisma.user.findUnique({ where: { email: data.email } }));
     if (!existingUser) {
-        await prisma.user.create({
+        await withPerf("Prisma Auth (create)", () => prisma.user.create({
             data: {
-                id: authData.user.id,
+                id: userId,
                 email: data.email,
                 persona: "quant",
                 globalStreak: 0,
@@ -55,7 +57,7 @@ export async function signup(formData: FormData) {
                     }
                 }
             }
-        });
+        }));
     }
   }
 
