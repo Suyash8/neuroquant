@@ -4,39 +4,39 @@ import SessionClient from "./SessionClient";
 import { redirect } from "next/navigation";
 import { ReflexQuestion } from "@/store/reflex";
 import { generateMathQuestion, OperationLevel } from "@/lib/mathGenerator";
+import { withPerf } from "@/lib/perf";
 
 export default async function SessionPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
   if (!user) {
     redirect("/login");
   }
 
-  const profile = await prisma.reflexProfile.findUnique({
-    where: { userId: user.id }
-  });
+  const [profile, userSettings, rawPendingProgress] = await withPerf("Prisma: Fetch Initial Session Data", () => Promise.all([
+    prisma.reflexProfile.findUnique({ where: { userId: user.id } }),
+    prisma.userSettings.findUnique({ where: { userId: user.id } }),
+    prisma.userReflexProgress.findMany({
+      where: {
+        profile: { userId: user.id },
+        nextReview: { lte: new Date() }
+      },
+      include: { card: true },
+      take: 150 // maximum possible daily goal
+    })
+  ]));
 
   if (!profile) {
     redirect("/practice/reflex");
   }
 
-  const userSettings = await prisma.userSettings.findUnique({
-    where: { userId: user.id }
-  });
   const operationLevel = (userSettings?.operationLevel || 1) as OperationLevel;
   const commutativity = userSettings?.commutativity ?? true;
   const dailyGoal = userSettings?.dailyGoal || 50;
 
-  // Fetch pending cards (interval <= now)
-  const pendingProgress = await prisma.userReflexProgress.findMany({
-    where: {
-      reflexProfileId: profile.id,
-      nextReview: { lte: new Date() }
-    },
-    include: { card: true },
-    take: dailyGoal // limit to daily goal
-  });
+  // Limit the progress array in memory to the user's custom daily goal
+  const pendingProgress = rawPendingProgress.slice(0, dailyGoal);
 
   let initialQuestions: ReflexQuestion[] = pendingProgress.map(p => ({
     id: p.id,
@@ -62,18 +62,19 @@ export default async function SessionPage() {
     const questionStrings = generatedQuestions.map(q => q.question);
 
     // 2. Fetch existing cards in bulk
-    const existingCards = await prisma.reflexCard.findMany({
+    const existingCards = await withPerf("Prisma: Fetch Existing Cards", () => prisma.reflexCard.findMany({
       where: { question: { in: questionStrings } }
-    });
+    }));
 
     const existingQuestionStrings = new Set(existingCards.map(c => c.question));
     
     // 3. Prepare missing cards for creation
     const missingCards = generatedQuestions.filter(q => !existingQuestionStrings.has(q.question));
     
-    // 4. Create missing cards in bulk (skip duplicates just in case)
+    // 4. Create missing cards in bulk and return them (skip duplicates just in case)
+    let insertedCards: typeof existingCards = [];
     if (missingCards.length > 0) {
-      await prisma.reflexCard.createMany({
+      insertedCards = await withPerf("Prisma: Create Missing Cards", () => prisma.reflexCard.createManyAndReturn({
         data: missingCards.map(c => ({
           question: c.question,
           answer: c.answer,
@@ -81,13 +82,11 @@ export default async function SessionPage() {
           difficulty: operationLevel,
         })),
         skipDuplicates: true
-      });
+      }));
     }
 
-    // 5. Fetch all required cards again to get their IDs
-    const finalCards = await prisma.reflexCard.findMany({
-      where: { question: { in: questionStrings } }
-    });
+    // 5. Combine in memory instead of fetching again
+    const finalCards = [...existingCards, ...insertedCards];
 
     // Populate the queue
     for (const card of finalCards) {

@@ -1,20 +1,21 @@
 import { createClient } from "@/utils/supabase/server";
 import prisma from "@/lib/prisma";
 import SettingsClient from "./SettingsClient";
+import { withPerf } from "@/lib/perf";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
   if (!user) return null;
 
-  const dbUser = await prisma.user.findUnique({
+  const dbUser = await withPerf("Prisma: Settings Fetch", () => prisma.user.findUnique({
     where: { id: user.id },
     include: {
       settings: true,
       reflexProfile: true,
     }
-  });
+  }));
 
   if (!dbUser) return null;
 

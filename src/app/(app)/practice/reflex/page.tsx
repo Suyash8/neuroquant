@@ -2,26 +2,31 @@ import Link from "next/link";
 import { Brain, Zap, Target, Activity } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { withPerf } from "@/lib/perf";
 
 export default async function ReflexDashboard() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
   let pendingCount = 0;
   let dailyProgress = 0;
 
   if (user) {
-    const profile = await prisma.reflexProfile.findUnique({
-      where: { userId: user.id }
-    });
+    const profile = await withPerf("Prisma: Squashed Profile Fetch", () => prisma.reflexProfile.findUnique({
+      where: { userId: user.id },
+      include: {
+        _count: {
+          select: {
+            progress: {
+              where: { nextReview: { lte: new Date() } }
+            }
+          }
+        }
+      }
+    }));
 
     if (profile) {
-      pendingCount = await prisma.userReflexProgress.count({
-        where: {
-          reflexProfileId: profile.id,
-          nextReview: { lte: new Date() }
-        }
-      });
+      pendingCount = profile._count.progress;
       
       const dailyQuota = profile.horizon === "14_days" ? 150 : 50; 
       dailyProgress = Math.max(0, Math.min(100, Math.round(((dailyQuota - pendingCount) / dailyQuota) * 100)));

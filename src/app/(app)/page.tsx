@@ -11,20 +11,6 @@ export default async function DashboardPage() {
 
   if (!user) return null;
 
-  const dbUser = await withPerf("Prisma: User Data (findUnique)", () => prisma.user.findUnique({
-    where: { id: user.id },
-    include: {
-      reflexProfile: true,
-      badges: {
-        include: { badge: true },
-        orderBy: { earnedAt: "desc" },
-        take: 5
-      }
-    }
-  }));
-
-  if (!dbUser) return null;
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -32,24 +18,41 @@ export default async function DashboardPage() {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  // Parallelize secondary queries
-  const [cardsDoneTodayCount, userSettings, velocityLogs] = await withPerf("Prisma: Parallel Stats Fetch", () => Promise.all([
+  // Ultimate Parallelization: Fire ALL queries simultaneously
+  const [dbUser, cardsDoneTodayCount, userSettings, velocityLogs, userBadges] = await withPerf("Prisma: Ultimate Parallel Fetch", () => Promise.all([
+    // Base user + profile
+    prisma.user.findUnique({
+      where: { id: user.id },
+      include: { reflexProfile: true }
+    }),
+    // Cards done today (relational filter)
     prisma.reflexVelocityLogs.count({
       where: {
-        reflexProfileId: dbUser.reflexProfile?.id,
+        profile: { userId: user.id },
         createdAt: { gte: today }
       }
     }),
+    // User Settings
     prisma.userSettings.findUnique({ where: { userId: user.id } }),
+    // 7-day velocity logs
     prisma.reflexVelocityLogs.findMany({
       where: {
-        reflexProfileId: dbUser.reflexProfile?.id,
+        profile: { userId: user.id },
         createdAt: { gte: sevenDaysAgo }
       },
       select: { createdAt: true, timeMs: true },
       orderBy: { createdAt: "asc" }
+    }),
+    // Recent badges
+    prisma.userBadge.findMany({
+      where: { userId: user.id },
+      include: { badge: true },
+      orderBy: { earnedAt: "desc" },
+      take: 5
     })
   ]));
+
+  if (!dbUser) return null;
 
   const dailyGoal = userSettings?.dailyGoal || 50; 
   const progressPct = Math.min(100, Math.round((cardsDoneTodayCount / dailyGoal) * 100));
@@ -184,8 +187,8 @@ export default async function DashboardPage() {
           </div>
           
           <div className="flex-1 flex flex-col gap-4">
-            {dbUser.badges.length > 0 ? (
-              dbUser.badges.map(ub => (
+            {userBadges.length > 0 ? (
+              userBadges.map(ub => (
                 <div key={ub.id} className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 flex-shrink-0 border border-yellow-500/20">
                     <Trophy className="w-5 h-5" />
