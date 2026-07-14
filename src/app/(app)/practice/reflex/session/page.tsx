@@ -5,8 +5,18 @@ import { redirect } from "next/navigation";
 import { ReflexQuestion } from "@/store/reflex";
 import { generateMathQuestion, OperationLevel } from "@/lib/mathGenerator";
 import { withPerf } from "@/lib/perf";
+import { Suspense } from "react";
+import SessionLoading from "./loading";
 
-export default async function SessionPage() {
+export default function SessionPage() {
+  return (
+    <Suspense fallback={<SessionLoading />}>
+      <SessionData />
+    </Suspense>
+  );
+}
+
+async function SessionData() {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 

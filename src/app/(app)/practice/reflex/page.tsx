@@ -3,8 +3,18 @@ import { Brain, Zap, Target, Activity } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { withPerf } from "@/lib/perf";
+import { Suspense } from "react";
+import ReflexLoading from "./loading";
 
-export default async function ReflexDashboard() {
+export default function ReflexPage() {
+  return (
+    <Suspense fallback={<ReflexLoading />}>
+      <ReflexData />
+    </Suspense>
+  );
+}
+
+async function ReflexData() {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 

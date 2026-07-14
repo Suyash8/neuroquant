@@ -5,7 +5,18 @@ import { createClient } from "@/utils/supabase/server";
 import { DashboardGraph } from "./DashboardGraph";
 import { withPerf } from "@/lib/perf";
 
-export default async function DashboardPage() {
+import { Suspense } from "react";
+import DashboardLoading from "./loading";
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <DashboardData />
+    </Suspense>
+  );
+}
+
+async function DashboardData() {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 

@@ -3,7 +3,18 @@ import prisma from "@/lib/prisma";
 import SettingsClient from "./SettingsClient";
 import { withPerf } from "@/lib/perf";
 
-export default async function SettingsPage() {
+import { Suspense } from "react";
+import SettingsLoading from "./loading";
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<SettingsLoading />}>
+      <SettingsData />
+    </Suspense>
+  );
+}
+
+async function SettingsData() {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 

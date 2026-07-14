@@ -1,62 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { updateSettings, updateProfile } from "@/actions/updateSettings";
-import { Save, User, Settings, Volume2, Smartphone, AlertTriangle } from "lucide-react";
+import { User, Settings, Volume2, Smartphone, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsClient({ initialSettings }: { initialSettings: any }) {
   const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [form, setForm] = useState(initialSettings);
 
   const handleChange = (key: string, value: any) => {
-    setForm((prev: any) => ({ ...prev, [key]: value }));
-  };
+    const newForm = { ...form, [key]: value };
+    setForm(newForm);
+    
+    // Auto-save in background
+    setSaveStatus("saving");
+    startTransition(async () => {
+      try {
+        await updateProfile({
+          displayName: newForm.displayName,
+          persona: newForm.persona,
+        });
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await updateProfile({
-        displayName: form.displayName,
-        persona: form.persona,
-      });
+        await updateSettings({
+          commutativity: newForm.commutativity,
+          horizon: newForm.horizon,
+          dailyGoal: newForm.dailyGoal,
+          soundEnabled: newForm.soundEnabled,
+          hapticEnabled: newForm.hapticEnabled,
+        });
+        
+        router.refresh();
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
 
-      await updateSettings({
-        commutativity: form.commutativity,
-        horizon: form.horizon,
-        dailyGoal: form.dailyGoal,
-        soundEnabled: form.soundEnabled,
-        hapticEnabled: form.hapticEnabled,
-      });
-      
-      router.refresh();
-      // force reload to apply persona theme correctly globally if changed
-      if (form.persona !== initialSettings.persona) {
-        window.location.reload();
+        if (key === "persona") {
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error(e);
+        setSaveStatus("idle");
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
+
 
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8 pb-24">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between h-14">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">System Settings</h1>
           <p className="text-gray-400 mt-1">Configure preferences and engine parameters.</p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          {isSaving ? "Saving..." : "Save Config"}
-        </button>
+        
+        <div className="flex items-center gap-2 text-sm">
+          {saveStatus === "saving" && (
+            <span className="flex items-center gap-2 text-gray-400 bg-white/5 px-3 py-1.5 rounded-full">
+              <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="flex items-center gap-2 text-primary bg-primary/10 px-3 py-1.5 rounded-full animate-in fade-in slide-in-from-right-2">
+              <CheckCircle2 className="w-4 h-4" /> Saved
+            </span>
+          )}
+        </div>
       </header>
 
       <div className="space-y-6">
@@ -79,7 +89,12 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
               <input 
                 type="text" 
                 value={form.displayName} 
-                onChange={(e) => handleChange("displayName", e.target.value)}
+                onChange={(e) => setForm({ ...form, displayName: e.target.value })}
+                onBlur={(e) => {
+                  if (e.target.value !== initialSettings.displayName) {
+                    handleChange("displayName", e.target.value);
+                  }
+                }}
                 placeholder="Operator"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary transition-colors" 
               />
@@ -154,7 +169,8 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 max="200" 
                 step="5"
                 value={form.dailyGoal}
-                onChange={(e) => handleChange("dailyGoal", parseInt(e.target.value))}
+                onChange={(e) => setForm({ ...form, dailyGoal: parseInt(e.target.value) })}
+                onPointerUp={() => handleChange("dailyGoal", form.dailyGoal)}
                 className="w-full accent-primary" 
               />
             </div>
