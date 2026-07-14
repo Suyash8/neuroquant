@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import SettingsClient from "./SettingsClient";
 import { withPerf } from "@/lib/perf";
 
@@ -18,7 +19,9 @@ async function SettingsData() {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
-  if (!user) return null;
+  if (!user) {
+    redirect("/login");
+  }
 
   const dbUser = await withPerf("Prisma: Settings Fetch", () => prisma.user.findUnique({
     where: { id: user.id },
@@ -28,7 +31,13 @@ async function SettingsData() {
     }
   }));
 
-  if (!dbUser) return null;
+  if (!dbUser) {
+    redirect("/login");
+  }
+
+  if (!dbUser.onboarded) {
+    redirect("/onboarding");
+  }
 
   const initialSettings = {
     displayName: dbUser.displayName || "",

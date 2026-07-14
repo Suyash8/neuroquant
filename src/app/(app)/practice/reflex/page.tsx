@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Brain, Zap, Target, Activity } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
@@ -21,27 +22,32 @@ async function ReflexData() {
   let pendingCount = 0;
   let dailyProgress = 0;
 
-  if (user) {
-    const profile = await withPerf("Prisma: Squashed Profile Fetch", () => prisma.reflexProfile.findUnique({
-      where: { userId: user.id },
-      include: {
-        _count: {
-          select: {
-            progress: {
-              where: { nextReview: { lte: new Date() } }
-            }
+  if (!user) {
+    redirect("/login");
+  }
+
+  const profile = await withPerf("Prisma: Squashed Profile Fetch", () => prisma.reflexProfile.findUnique({
+    where: { userId: user.id },
+    include: {
+      _count: {
+        select: {
+          progress: {
+            where: { nextReview: { lte: new Date() } }
           }
         }
       }
-    }));
+    }
+  }));
 
-    if (profile) {
+  if (profile) {
       pendingCount = profile._count.progress;
       
       const dailyQuota = profile.horizon === "14_days" ? 150 : 50; 
       dailyProgress = Math.max(0, Math.min(100, Math.round(((dailyQuota - pendingCount) / dailyQuota) * 100)));
       if (pendingCount === 0) dailyProgress = 100;
-    }
+  } else {
+    // If we have a user but no reflex profile, they aren't fully onboarded
+    redirect("/onboarding");
   }
 
   return (

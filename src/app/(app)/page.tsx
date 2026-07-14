@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Brain, Flame, Target, Trophy, Activity, ArrowRight, Star, Zap } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
@@ -20,7 +21,9 @@ async function DashboardData() {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
-  if (!user) return null;
+  if (!user) {
+    redirect("/login");
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -63,7 +66,13 @@ async function DashboardData() {
     })
   ]));
 
-  if (!dbUser) return null;
+  if (!dbUser) {
+    redirect("/login");
+  }
+
+  if (!dbUser.onboarded) {
+    redirect("/onboarding");
+  }
 
   const dailyGoal = userSettings?.dailyGoal || 50; 
   const progressPct = Math.min(100, Math.round((cardsDoneTodayCount / dailyGoal) * 100));
