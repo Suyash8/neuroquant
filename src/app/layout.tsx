@@ -16,10 +16,27 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "NeuroQuant | Cognitive & Quantitative Training",
-  description: "High-performance mental math and automaticity trainer.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+
+  let favicon = "/favicon-quant.svg";
+
+  if (authUser) {
+    const dbUser = await prisma.user.findUnique({ where: { id: authUser.id } });
+    if (dbUser?.persona === "generalist") {
+      favicon = "/favicon-generalist.svg";
+    }
+  }
+
+  return {
+    title: "NeuroQuant | Cognitive & Quantitative Training",
+    description: "High-performance mental math and automaticity trainer.",
+    icons: {
+      icon: favicon,
+    }
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

@@ -10,10 +10,10 @@
 
 /* Base Theme - Deep Dark Mode */
 :root {
-  --background: #0F1115;
-  --foreground: #f3f4f6; /* Gray 100 */
-  --primary: #0ea5e9; /* Light Blue 500 */
-  --primary-rgb: 14, 165, 233;
+  --background: #09090b; /* Deep zinc-950 */
+  --foreground: #f4f4f5; /* Zinc 100 */
+  --primary: #a3e635; /* Neon Green */
+  --primary-rgb: 163, 230, 53;
 }
 
 /* Quant Persona Theme */
@@ -68,7 +68,16 @@ body {
 
 @layer utilities {
   .glass-panel {
-    @apply bg-[#16191E] border border-white/5 backdrop-blur-md rounded-xl;
+    @apply bg-[#18181b] border border-white/5 backdrop-blur-md rounded-2xl;
+  }
+  .mynt-card {
+    @apply bg-[#111315] border border-zinc-800 rounded-2xl;
+  }
+  .btn-glow-green {
+    @apply bg-gradient-to-r from-green-500 to-green-400 text-black font-semibold shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] hover:brightness-110 active:scale-95;
+  }
+  .btn-glow-orange {
+    @apply bg-gradient-to-r from-orange-500 to-amber-500 text-black font-semibold shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:brightness-110 active:scale-95;
   }
   .hover-glow {
     @apply transition-all duration-300;

@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1115] flex flex-col items-center justify-center p-6 text-foreground">
+    <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-6 text-foreground">
       <div className="w-full max-w-4xl">
         <OnboardingClient />
       </div>
