@@ -59,6 +59,11 @@ export async function signup(formData: FormData) {
             }
         }));
     }
+    
+    // If Supabase requires email confirmation, a session won't be created yet
+    if (!authData.session) {
+      return redirect('/login?message=Check your email to confirm your account')
+    }
   }
 
   revalidatePath('/', 'layout')

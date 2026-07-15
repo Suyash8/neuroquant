@@ -40,6 +40,16 @@ body {
   touch-action: manipulation;
 }
 
+/* Ensure pointer cursor on interactable elements */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
 /* Custom scrollbar for Webkit browsers */
 ::-webkit-scrollbar {
   width: 6px;
