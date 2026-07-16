@@ -5,8 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function completeOnboarding(
   persona: string,
-  horizon: string,
-  diagnosticScore: number // placeholder for initial difficulty mapping if we use it
+  horizon: string
 ) {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();

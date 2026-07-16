@@ -27,6 +27,7 @@ model User {
   reflexProfile     ReflexProfile?
   settings          UserSettings?
   badges            UserBadge[]
+  diagnosticResults DiagnosticResult[]
 }
 
 model UserSettings {
@@ -36,7 +37,6 @@ model UserSettings {
   dailyGoal         Int     @default(50)
   soundEnabled      Boolean @default(true)
   hapticEnabled     Boolean @default(true)
-  operationLevel    Int     @default(1)
   
   user              User    @relation(fields: [userId], references: [id])
 }
@@ -112,4 +112,17 @@ model ReflexVelocityLogs {
   createdAt       DateTime @default(now())
 
   profile         ReflexProfile @relation(fields: [reflexProfileId], references: [id])
+}
+
+model DiagnosticResult {
+  id                   String   @id @default(uuid())
+  userId               String
+  score                Int      
+  maxDifficultyReached Int      
+  averageVelocityMs    Float    
+  accuracy             Float    
+  category             String   @default("multiplication")
+  createdAt            DateTime @default(now())
+
+  user                 User     @relation(fields: [userId], references: [id])
 }

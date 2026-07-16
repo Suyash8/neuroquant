@@ -39,27 +39,6 @@ export async function signup(formData: FormData) {
   }
 
   if (authData.user) {
-    const userId = authData.user.id;
-    // Create the Prisma User record to match the Auth User
-    const existingUser = await withPerf("Prisma Auth (findUnique)", () => prisma.user.findUnique({ where: { email: data.email } }));
-    if (!existingUser) {
-        await withPerf("Prisma Auth (create)", () => prisma.user.create({
-            data: {
-                id: userId,
-                email: data.email,
-                persona: "quant",
-                globalStreak: 0,
-                totalPoints: 0,
-                reflexProfile: {
-                    create: {
-                        horizon: "30_days",
-                        moduleStreak: 0
-                    }
-                }
-            }
-        }));
-    }
-    
     // If Supabase requires email confirmation, a session won't be created yet
     if (!authData.session) {
       return redirect('/login?message=Check your email to confirm your account')

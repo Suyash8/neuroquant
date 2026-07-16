@@ -7,6 +7,7 @@ import { generateMathQuestion, OperationLevel } from "@/lib/mathGenerator";
 import { withPerf } from "@/lib/perf";
 import { Suspense } from "react";
 import SessionLoading from "./loading";
+import { getUserLevel } from "@/utils/levelCalculator";
 
 export default function SessionPage() {
   return (
@@ -41,7 +42,7 @@ async function SessionData() {
     redirect("/practice/reflex");
   }
 
-  const operationLevel = (userSettings?.operationLevel || 1) as OperationLevel;
+  const operationLevel = (await getUserLevel(user.id)) as OperationLevel;
   const commutativity = userSettings?.commutativity ?? true;
   const dailyGoal = userSettings?.dailyGoal || 50;
 

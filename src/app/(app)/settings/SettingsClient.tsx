@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateSettings, updateProfile } from "@/actions/updateSettings";
-import { User, Settings, Volume2, Smartphone, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import { User, Settings, Volume2, Smartphone, AlertTriangle, Loader2, CheckCircle2, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsClient({ initialSettings }: { initialSettings: any }) {
@@ -216,6 +216,27 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.hapticEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* Diagnostic Section */}
+        <section className="mynt-card p-6 space-y-6">
+          <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-4">
+            <Zap className="w-5 h-5 text-zinc-400" />
+            <h2 className="text-xl font-semibold text-white">Diagnostic & Calibration</h2>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-white">Retake Baseline Diagnostic</div>
+              <div className="text-sm text-zinc-400">Recalibrate your difficulty tier and update your granular profile.</div>
+            </div>
+            <button 
+              onClick={() => router.push("/practice/diagnostic?source=settings")}
+              className="px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20 font-semibold rounded-lg transition-colors border border-[var(--primary)]/20"
+            >
+              Run Diagnostic
+            </button>
           </div>
         </section>
 

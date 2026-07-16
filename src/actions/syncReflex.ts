@@ -106,14 +106,6 @@ export async function syncReflexSession(payload: SyncPayload) {
           ? sessionArv 
           : (userDoc.averageVelocityMs * 0.9) + (sessionArv * 0.1);
 
-        // Progression check
-        let newLevel = userDoc.settings?.operationLevel || 1;
-        if (newArv > 0 && newArv < 1500 && newLevel < 10) {
-           if (userDoc.totalPoints + totalPointsEarned > newLevel * 100) {
-              newLevel += 1;
-           }
-        }
-
         await tx.user.update({
           where: { id: userId },
           data: {
@@ -124,13 +116,6 @@ export async function syncReflexSession(payload: SyncPayload) {
             averageVelocityMs: newArv
           }
         });
-        
-        if (userDoc.settings && userDoc.settings.operationLevel !== newLevel) {
-          await tx.userSettings.update({
-            where: { userId },
-            data: { operationLevel: newLevel }
-          });
-        }
       }
     });
 
