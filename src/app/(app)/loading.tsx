@@ -1,118 +1,117 @@
-import { Activity, Flame, Star, Target, Trophy, Zap } from "lucide-react";
+import { Activity, Calendar, ChevronRight, Star } from "lucide-react";
 
 export default function DashboardLoading() {
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8 animate-pulse">
+    <div className="p-8 max-w-6xl mx-auto space-y-10 animate-pulse">
       
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div className="h-9 w-64 bg-white/10 rounded-lg mb-2"></div>
-          <div className="h-5 w-48 bg-white/5 rounded-lg"></div>
-        </div>
+      <header>
+        <div className="h-10 w-64 bg-white/10 rounded-lg"></div>
       </header>
 
-      {/* Top Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <div className="glass-panel p-6 flex flex-col justify-between h-40">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Global Streak</h3>
-            <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-              <Flame className="w-5 h-5 text-orange-500/50" />
-            </div>
+        {/* Today's Goals Skeleton */}
+        <div className="mynt-card p-6 col-span-1 lg:col-span-2 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white/50 flex items-center gap-2">
+              <Star className="w-5 h-5 text-primary/30 fill-primary/30" /> Today's goals
+            </h3>
+            <span className="h-4 w-12 bg-white/10 rounded"></span>
           </div>
-          <div>
-            <div className="h-10 w-24 bg-white/10 rounded-lg mb-2"></div>
-            <div className="h-4 w-32 bg-white/5 rounded-lg"></div>
+          
+          <div className="flex-1 space-y-4">
+            {/* Goal 1 */}
+            <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5">
+              <div className="flex items-center gap-4">
+                <div className="w-6 h-6 rounded-full border-2 border-zinc-700/50" />
+                <div>
+                  <div className="h-5 w-36 bg-white/10 rounded mb-2"></div>
+                  <div className="h-3 w-48 bg-white/5 rounded"></div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="h-5 w-12 bg-white/10 rounded mb-2 ml-auto"></div>
+                <div className="h-3 w-8 bg-white/5 rounded ml-auto"></div>
+              </div>
+            </div>
+            
+            {/* Goal 2 */}
+            <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5">
+              <div className="flex items-center gap-4">
+                <div className="w-6 h-6 rounded-full border-2 border-zinc-700/50" />
+                <div>
+                  <div className="h-5 w-40 bg-white/10 rounded mb-2"></div>
+                  <div className="h-3 w-52 bg-white/5 rounded"></div>
+                </div>
+              </div>
+              <div className="h-8 w-16 bg-white/5 rounded-lg"></div>
+            </div>
           </div>
         </div>
 
-        <div className="glass-panel p-6 flex flex-col justify-between h-40">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Ecosystem Points</h3>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Star className="w-5 h-5 text-primary/50" />
+        {/* Activity Calendar Skeleton */}
+        <div className="mynt-card p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white/50 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-400/50" /> Activity calendar
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-7 gap-2 mb-6">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <div className="h-3 w-3 bg-white/10 rounded"></div>
+                <div className="w-8 h-8 rounded-full bg-zinc-800/50"></div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-auto p-4 bg-zinc-900/50 rounded-xl border border-white/5 flex items-center justify-between">
+            <div>
+              <div className="h-3 w-20 bg-white/10 rounded mb-2"></div>
+              <div className="h-6 w-24 bg-white/20 rounded"></div>
             </div>
-          </div>
-          <div>
-            <div className="h-10 w-32 bg-white/10 rounded-lg mb-2"></div>
-            <div className="h-4 w-28 bg-white/5 rounded-lg"></div>
-          </div>
-        </div>
-
-        <div className="glass-panel p-6 flex flex-col justify-between h-40">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-400 font-medium">Avg. Response Velocity</h3>
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white/50" />
+            <div className="text-right">
+               <div className="h-3 w-20 bg-white/10 rounded mb-2 ml-auto"></div>
+               <div className="h-6 w-16 bg-white/20 rounded ml-auto"></div>
             </div>
-          </div>
-          <div>
-            <div className="h-10 w-28 bg-white/10 rounded-lg mb-2"></div>
-            <div className="h-4 w-36 bg-white/5 rounded-lg"></div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Today's Progress */}
-        <div className="glass-panel p-6 col-span-1 lg:col-span-2 min-h-[250px]">
-          <h3 className="text-lg font-bold text-white/50 mb-6 flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary/50" /> Today's Objectives
-          </h3>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-8">
-            <div className="relative w-32 h-32 flex-shrink-0 rounded-full bg-white/5 border-8 border-white/10"></div>
-            
-            <div className="flex-1 space-y-4 w-full">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <div className="h-4 w-24 bg-white/10 rounded"></div>
-                  <div className="h-4 w-24 bg-white/10 rounded"></div>
-                </div>
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden"></div>
-              </div>
-              
-              <div className="flex gap-3 pt-2">
-                <div className="flex-1 h-10 bg-white/10 rounded-lg"></div>
-                <div className="flex-1 h-10 bg-white/5 rounded-lg"></div>
-              </div>
+        {/* Practice Modes Skeleton */}
+        <div className="mynt-card p-6 col-span-1 lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white/50">Study plans</h3>
+            <div className="flex items-center gap-1">
+              <div className="h-4 w-16 bg-white/10 rounded"></div>
+              <ChevronRight className="w-4 h-4 text-white/30" />
             </div>
           </div>
-        </div>
-
-        {/* Recent Badges */}
-        <div className="glass-panel p-6 flex flex-col min-h-[250px]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-white/50 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500/50" /> Achievements
-            </h3>
-          </div>
-          
-          <div className="flex-1 flex flex-col gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex-shrink-0"></div>
-                <div className="flex-1">
-                  <div className="h-4 w-3/4 bg-white/10 rounded mb-1"></div>
-                  <div className="h-3 w-1/2 bg-white/5 rounded"></div>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div className="p-5 bg-zinc-900/50 border border-white/5 rounded-xl h-40">
+               <div className="w-8 h-8 rounded-full bg-white/10 mb-4" />
+               <div className="h-5 w-32 bg-white/20 rounded mb-2"></div>
+               <div className="h-3 w-48 bg-white/10 rounded"></div>
+             </div>
+             <div className="p-5 bg-zinc-900/50 border border-white/5 rounded-xl h-40">
+               <div className="w-8 h-8 rounded-full bg-white/10 mb-4" />
+               <div className="h-5 w-32 bg-white/20 rounded mb-2"></div>
+               <div className="h-3 w-48 bg-white/10 rounded"></div>
+             </div>
           </div>
         </div>
         
-        {/* Performance Graph */}
-        <div className="glass-panel p-6 flex flex-col col-span-1 lg:col-span-3 h-[300px]">
-          <h3 className="text-lg font-bold text-white/50 mb-6 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-green-500/50" /> Velocity Trend (7 Days)
+        {/* Velocity Graph Skeleton */}
+        <div className="mynt-card p-6 flex flex-col h-[300px]">
+          <h3 className="text-lg font-bold text-white/50 mb-2 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-blue-400/50" /> Velocity Trend
           </h3>
-          <div className="flex-1 w-full bg-white/5 rounded-xl border border-white/5"></div>
+          <div className="h-3 w-40 bg-white/10 rounded mb-4"></div>
+          <div className="flex-1 w-full bg-white/5 rounded-xl"></div>
         </div>
-
       </div>
-        
     </div>
   );
 }

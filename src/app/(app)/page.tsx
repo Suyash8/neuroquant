@@ -30,10 +30,14 @@ async function DashboardData() {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  const [dbUser, cardsDoneTodayCount, userSettings, velocityLogs, userBadges] = await withPerf("Prisma: Ultimate Parallel Fetch", () => Promise.all([
+  const [dbUser, activityHistory, cardsDoneTodayCount, userSettings, velocityLogs, userBadges] = await withPerf("Prisma: Ultimate Parallel Fetch", () => Promise.all([
     prisma.user.findUnique({
       where: { id: user.id },
       include: { reflexProfile: true }
+    }),
+    prisma.userActivity.findMany({
+      where: { userId: user.id, date: { gte: sevenDaysAgo } },
+      select: { date: true, count: true }
     }),
     prisma.reflexVelocityLogs.count({
       where: { profile: { userId: user.id }, createdAt: { gte: today } }
@@ -77,9 +81,14 @@ async function DashboardData() {
 
   const arv = dbUser.averageVelocityMs > 0 ? (dbUser.averageVelocityMs / 1000).toFixed(2) : "--";
 
-  // Generate a mock 7-day activity calendar
-  const currentDayOfWeek = new Date().getDay();
+  // Activity Calendar mapping
+  const currentDayOfWeek = new Date().getDay(); // 0 = Sun, 1 = Mon, etc.
   const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  
+  // Create a set of ISO date strings for days with activity
+  const activeDateStrings = new Set(
+    activityHistory.map(a => new Date(a.date).toISOString().split('T')[0])
+  );
   
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
@@ -104,7 +113,7 @@ async function DashboardData() {
             <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5">
               <div className="flex items-center gap-4">
                 {progressPct >= 100 ? (
-                  <CheckCircle2 className="w-6 h-6 text-primary fill-primary/20" />
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
                 ) : (
                   <div className="w-6 h-6 rounded-full border-2 border-zinc-700" />
                 )}
@@ -119,18 +128,24 @@ async function DashboardData() {
               </div>
             </div>
             
-            {/* Goal Item 2 (Mock) */}
-            <div className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5">
+            {/* Goal Item 2 */}
+            <div className={`flex items-center justify-between p-4 bg-zinc-900/50 rounded-xl border border-white/5 transition-all ${dbUser.reflexProfile && dbUser.reflexProfile.suddenDeathHighScore >= 20 ? 'opacity-70' : ''}`}>
               <div className="flex items-center gap-4">
-                <div className="w-6 h-6 rounded-full border-2 border-zinc-700" />
+                {dbUser.reflexProfile && dbUser.reflexProfile.suddenDeathHighScore >= 20 ? (
+                  <CheckCircle2 className="w-6 h-6 text-orange-500" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full border-2 border-zinc-700" />
+                )}
                 <div>
                   <h4 className="text-white font-medium">Survive Sudden Death</h4>
                   <p className="text-xs text-zinc-400">Reach a streak of 20 without missing.</p>
                 </div>
               </div>
-              <Link href="/practice/reflex/sudden-death" className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-white font-medium transition-colors">
-                Start
-              </Link>
+              {(!dbUser.reflexProfile || dbUser.reflexProfile.suddenDeathHighScore < 20) && (
+                <Link href="/practice/reflex/sudden-death" className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-white font-medium transition-colors">
+                  Start
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -145,19 +160,33 @@ async function DashboardData() {
           
           <div className="grid grid-cols-7 gap-2 mb-6">
             {weekDays.map((day, i) => {
-              // Mock active days based on global streak
-              const isActive = i < dbUser.globalStreak;
-              const isToday = i === currentDayOfWeek - 1; // Simplification
+              // Convert calendar index (0 = Monday, 6 = Sunday) to Date to check activity
+              // currentDayOfWeek (0 = Sunday... 6 = Saturday)
+              // Let's find the difference in days from the current day to this cell
+              
+              // Standard JS getDay() is 0=Sun. We want 0=Mon, 6=Sun.
+              const jsCurrentDay = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+              const daysAgo = jsCurrentDay - i;
+              
+              const cellDate = new Date();
+              cellDate.setDate(cellDate.getDate() - daysAgo);
+              const cellDateStr = cellDate.toISOString().split('T')[0];
+              
+              const isActive = activeDateStrings.has(cellDateStr) || (daysAgo === 0 && cardsDoneTodayCount > 0);
+              const isToday = daysAgo === 0;
+              const isFuture = daysAgo < 0;
               
               return (
                 <div key={i} className="flex flex-col items-center gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500">{day}</span>
+                  <span className={`text-[10px] font-bold ${isToday ? 'text-white' : 'text-zinc-500'}`}>{day}</span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                    ${isActive && !isToday ? 'bg-primary text-black shadow-[0_0_10px_rgba(163,230,53,0.3)]' : ''}
-                    ${isToday ? 'bg-orange-500 text-black shadow-[0_0_10px_rgba(249,115,22,0.3)] scale-110' : ''}
-                    ${!isActive && !isToday ? 'bg-zinc-800 text-zinc-600' : ''}
+                    ${isActive && !isToday ? 'bg-primary shadow-[0_0_10px_rgba(163,230,53,0.3)]' : ''}
+                    ${isActive && isToday ? 'bg-primary shadow-[0_0_10px_rgba(163,230,53,0.5)] scale-110' : ''}
+                    ${!isActive && isToday ? 'bg-zinc-800 border-2 border-zinc-600 scale-110' : ''}
+                    ${!isActive && !isToday && !isFuture ? 'bg-zinc-800/50' : ''}
+                    ${isFuture ? 'bg-transparent border border-white/5' : ''}
                   `}>
-                    {/* Optionally show a checkmark or number inside */}
+                    {isActive && <CheckCircle2 className="w-5 h-5 text-black" />}
                   </div>
                 </div>
               )
@@ -189,17 +218,28 @@ async function DashboardData() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-             <Link href="/practice/reflex/session" className="p-5 bg-zinc-900 hover:bg-zinc-800 border border-white/5 rounded-xl transition-all group relative overflow-hidden">
-               <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
-               <Brain className="w-8 h-8 text-primary mb-4" />
-               <h4 className="text-white font-bold mb-1 group-hover:text-primary transition-colors">Reflex Engine</h4>
-               <p className="text-sm text-zinc-400">Mental math and speed drills.</p>
+             <Link href="/practice/reflex/session" className="p-5 bg-gradient-to-b from-zinc-800/50 to-zinc-900 hover:from-zinc-800 hover:to-zinc-800 border border-white/5 hover:border-primary/30 rounded-xl transition-all group relative overflow-hidden flex flex-col justify-between">
+               <div className="absolute top-0 left-0 w-full h-1 bg-primary/20 group-hover:bg-primary transition-colors" />
+               <div>
+                 <Brain className="w-8 h-8 text-primary mb-4 group-hover:scale-110 transition-transform duration-500" />
+                 <h4 className="text-white font-bold mb-1 text-lg group-hover:text-primary transition-colors">Reflex Engine</h4>
+                 <p className="text-sm text-zinc-400">Mental math and speed drills.</p>
+               </div>
+               <div className="mt-6 flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                 Enter <ArrowRight className="w-3 h-3" />
+               </div>
              </Link>
-             <Link href="/practice/reflex/sudden-death" className="p-5 bg-zinc-900 hover:bg-zinc-800 border border-white/5 rounded-xl transition-all group relative overflow-hidden">
-               <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.8)]" />
-               <Target className="w-8 h-8 text-orange-500 mb-4" />
-               <h4 className="text-white font-bold mb-1 group-hover:text-orange-500 transition-colors">Sudden Death</h4>
-               <p className="text-sm text-zinc-400">High-stakes stress testing.</p>
+             
+             <Link href="/practice/reflex/sudden-death" className="p-5 bg-gradient-to-b from-zinc-800/50 to-zinc-900 hover:from-zinc-800 hover:to-zinc-800 border border-white/5 hover:border-orange-500/30 rounded-xl transition-all group relative overflow-hidden flex flex-col justify-between">
+               <div className="absolute top-0 left-0 w-full h-1 bg-orange-500/20 group-hover:bg-orange-500 transition-colors" />
+               <div>
+                 <Target className="w-8 h-8 text-orange-500 mb-4 group-hover:scale-110 transition-transform duration-500" />
+                 <h4 className="text-white font-bold mb-1 text-lg group-hover:text-orange-500 transition-colors">Sudden Death</h4>
+                 <p className="text-sm text-zinc-400">High-stakes stress testing.</p>
+               </div>
+               <div className="mt-6 flex items-center gap-2 text-xs font-bold text-orange-500 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+                 Enter <ArrowRight className="w-3 h-3" />
+               </div>
              </Link>
           </div>
         </div>

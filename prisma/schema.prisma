@@ -28,6 +28,7 @@ model User {
   settings          UserSettings?
   badges            UserBadge[]
   diagnosticResults DiagnosticResult[]
+  activities        UserActivity[]
 }
 
 model UserSettings {
@@ -62,6 +63,17 @@ model UserBadge {
   badge     Badge    @relation(fields: [badgeId], references: [id])
   
   @@unique([userId, badgeId])
+}
+
+model UserActivity {
+  id        String   @id @default(uuid())
+  userId    String
+  date      DateTime
+  count     Int      @default(1)
+  
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, date])
 }
 
 // 2. MODULE: REFLEX ENGINE

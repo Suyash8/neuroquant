@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
+import { logUserActivityAndStreak } from "@/lib/activityTracker";
 
 export async function saveSuddenDeath(score: number, logs: any[]) {
   const supabase = await createClient();
@@ -36,6 +37,10 @@ export async function saveSuddenDeath(score: number, logs: any[]) {
         data: { suddenDeathHighScore: score }
       });
     }
+
+    // Determine points earned (Sudden Death rewards survival)
+    const points = score * 2; // e.g., 2 points per correct answer
+    await logUserActivityAndStreak(tx as any, user.id, points);
   });
 
   return { success: true };

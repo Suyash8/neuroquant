@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { logUserActivityAndStreak } from "@/lib/activityTracker";
 
 interface SyncPayload {
   userId: string;
@@ -74,32 +75,8 @@ export async function syncReflexSession(payload: SyncPayload) {
       ));
       
       // 3. Streak & ARV & Level Progression logic
-      const userDoc = await tx.user.findUnique({ where: { id: userId }, include: { settings: true } });
+      const userDoc = await tx.user.findUnique({ where: { id: userId } });
       if (userDoc) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const lastSessionDate = userDoc.lastSessionDate ? new Date(userDoc.lastSessionDate) : null;
-        if (lastSessionDate) lastSessionDate.setHours(0, 0, 0, 0);
-        
-        let newStreak = userDoc.globalStreak;
-        let newFreezes = userDoc.streakFreezes;
-        
-        if (!lastSessionDate) {
-          newStreak = 1;
-        } else {
-          const diffDays = Math.floor((today.getTime() - lastSessionDate.getTime()) / (1000 * 60 * 60 * 24));
-          if (diffDays === 1) {
-            newStreak += 1;
-          } else if (diffDays > 1) {
-            if (newFreezes > 0) {
-              newFreezes -= 1;
-              newStreak += 1; // Used a freeze
-            } else {
-              newStreak = 1; // Streak broken
-            }
-          }
-        }
-        
         // Simple ARV moving average approximation
         const sessionArv = logs.reduce((acc, l) => acc + l.timeMs, 0) / logs.length;
         const newArv = userDoc.averageVelocityMs === 0 
@@ -108,14 +85,10 @@ export async function syncReflexSession(payload: SyncPayload) {
 
         await tx.user.update({
           where: { id: userId },
-          data: {
-            globalStreak: newStreak,
-            streakFreezes: newFreezes,
-            totalPoints: userDoc.totalPoints + totalPointsEarned,
-            lastSessionDate: new Date(),
-            averageVelocityMs: newArv
-          }
+          data: { averageVelocityMs: newArv }
         });
+
+        await logUserActivityAndStreak(tx as any, userId, totalPointsEarned);
       }
     });
 
