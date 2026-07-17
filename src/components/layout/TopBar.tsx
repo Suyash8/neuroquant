@@ -5,6 +5,7 @@ import { useGlobalStore } from "@/store/global";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import { UserDropdown } from "./UserDropdown";
 
 export function TopBar() {
   const user = useGlobalStore(state => state.user);
@@ -43,9 +44,6 @@ export function TopBar() {
         </div>
         
         <div className="hidden md:flex items-center gap-5 ml-2 border-l border-white/10 pl-6">
-          <button className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-            Feedback
-          </button>
           <button className="text-zinc-400 hover:text-white transition-colors">
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -54,9 +52,7 @@ export function TopBar() {
           </button>
         </div>
 
-        <Link href="/settings" className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center ml-2 border border-zinc-700 hover:border-zinc-500 transition-colors">
-          <span className="text-xs font-bold text-zinc-400">{user?.persona === "quant" ? "Q" : "G"}</span>
-        </Link>
+        <UserDropdown />
       </div>
     </header>
   );

@@ -8,6 +8,8 @@ interface GlobalState {
     persona: Persona;
     globalStreak: number;
     totalPoints: number;
+    username: string | null;
+    displayName: string | null;
   } | null;
   setUser: (user: GlobalState['user']) => void;
   addPoints: (points: number) => void;

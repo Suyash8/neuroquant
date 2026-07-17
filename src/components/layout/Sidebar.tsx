@@ -15,7 +15,6 @@ export function Sidebar() {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Analytics", href: "/analytics", icon: Activity, locked: true },
     { name: "Leaderboard", href: "/leaderboard", icon: Trophy, locked: true },
-    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   const practiceItems = [

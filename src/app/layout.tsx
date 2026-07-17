@@ -66,6 +66,8 @@ export default async function RootLayout({
         persona: dbUser.persona,
         globalStreak: dbUser.globalStreak,
         totalPoints: dbUser.totalPoints,
+        username: dbUser.username,
+        displayName: dbUser.displayName,
       };
       activePersona = `theme-${dbUser.persona}`;
     }
