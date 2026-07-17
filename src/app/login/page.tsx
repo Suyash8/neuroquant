@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { Loader2, Check, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -55,7 +55,7 @@ function LoginForm() {
     "bg-[#00FF9D]" // 4
   ];
 
-  const variants = {
+  const variants: Variants = {
     initial: (direction: number) => ({
       x: direction > 0 ? 30 : -30,
       opacity: 0,

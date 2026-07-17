@@ -6,7 +6,7 @@ import { Target, Zap, ArrowRight, Loader2, Check } from "lucide-react";
 import { completeOnboarding } from "@/actions/completeOnboarding";
 import { checkUsernameAvailability } from "@/actions/checkUsername";
 import { Logo } from "@/components/ui/Logo";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 type Step = 1 | 2 | 3 | 4;
 type Persona = "quant" | "generalist" | null;
@@ -151,7 +151,7 @@ export default function OnboardingClient() {
     }
   };
 
-  const variants = {
+  const variants: Variants = {
     initial: (direction: number) => ({
       x: direction > 0 ? 50 : -50,
       opacity: 0,

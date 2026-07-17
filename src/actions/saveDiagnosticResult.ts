@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
-import { completeOnboarding } from "./completeOnboarding";
 
 export async function saveDiagnosticResult(
   source: string | null,
@@ -33,11 +32,6 @@ export async function saveDiagnosticResult(
       category: "multiplication", // Future proofing
     }
   });
-
-  // If this came from onboarding, complete the onboarding flow
-  if (source === "onboarding" && persona && horizon) {
-    await completeOnboarding(persona, horizon);
-  }
 
   return { success: true };
 }

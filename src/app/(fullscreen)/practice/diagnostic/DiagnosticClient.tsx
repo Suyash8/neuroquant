@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Zap, Clock, ArrowRight, Loader2, X } from "lucide-react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import { Trophy, Zap, Clock, ArrowRight, Loader2, X, Target } from "lucide-react";
 import { saveDiagnosticResult } from "@/actions/saveDiagnosticResult";
 import { generateMathQuestion, OperationLevel } from "@/lib/mathGenerator";
 
@@ -54,7 +54,7 @@ export default function DiagnosticClient({
     
     return {
       id: crypto.randomUUID(),
-      cardId: crypto.randomUUID(), // fake id for diagnostic tracking
+      cardId: crypto.randomUUID(),
       question: math.question,
       answer: math.answer,
       difficulty: level
@@ -188,145 +188,211 @@ export default function DiagnosticClient({
     }
   };
 
-  if (isGameOver) {
-    const accuracy = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
-    const avgVelocity = score > 0 ? (totalVelocityMs / score / 1000).toFixed(2) : "0.00";
+  const accuracy = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
+  const avgVelocity = score > 0 ? (totalVelocityMs / score / 1000).toFixed(2) : "0.00";
 
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center animate-in fade-in duration-500 w-full">
-        <div className="mynt-card p-8 w-full max-w-md text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mx-auto">
-            <Trophy className="w-8 h-8 text-[var(--primary)]" />
-          </div>
-          
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-2">
-              Calibration Complete
-            </h2>
-            <p className="text-gray-400">Your baseline has been logged.</p>
-          </div>
+  const containerVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut", staggerChildren: 0.1 } },
+    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.3 } }
+  };
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 p-4 rounded-xl">
-              <div className="text-sm text-gray-400 mb-1">Score</div>
-              <div className="text-3xl font-bold text-white">{score}</div>
-            </div>
-            <div className="bg-[var(--primary)]/10 p-4 rounded-xl border border-[var(--primary)]/20">
-              <div className="text-sm text-[var(--primary)] mb-1">Accuracy</div>
-              <div className="text-3xl font-bold text-white">{accuracy}%</div>
-            </div>
-            <div className="bg-white/5 p-4 rounded-xl">
-              <div className="text-sm text-gray-400 mb-1">Avg Speed</div>
-              <div className="text-3xl font-bold text-white">{avgVelocity}s</div>
-            </div>
-            <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-              <div className="text-sm text-gray-400 mb-1">Max Tier</div>
-              <div className="text-3xl font-bold text-white">Lvl {maxDifficultyReached}</div>
-            </div>
-          </div>
-
-          <button 
-            onClick={handleComplete}
-            disabled={isSaving}
-            className="w-full flex items-center justify-center gap-2 py-4 btn-glow-green text-black font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {isSaving ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</>
-            ) : (
-              <>Continue to Dashboard <ArrowRight className="w-5 h-5" /></>
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentCard) return null;
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-between p-4 pb-8 h-[100dvh] w-full max-w-sm mx-auto select-none">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#09090b] relative overflow-hidden select-none">
       
-      {/* Header */}
-      <div className="w-full flex items-center justify-between mt-4">
-        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl">
-          <Clock className={`w-4 h-4 ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-400'}`} />
-          <span className={`font-mono font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-white'}`}>
-            00:{timeLeft.toString().padStart(2, '0')}
-          </span>
-        </div>
+      {/* Ambient Glows based on state (removed) */}
 
-        <div className="flex items-center gap-2">
-          {/* Difficulty indicator (up to 10 levels) */}
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div 
-              key={i}
-              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-colors ${i < difficulty ? 'bg-[var(--primary)]' : 'bg-white/10'}`}
-            />
-          ))}
-        </div>
-
-        <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-[var(--primary)]" />
-          <span className="font-bold text-white">{score}</span>
-        </div>
-      </div>
-
-      {/* Main Card Area */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full relative">
-        <input 
-          ref={inputRef}
-          type="text" 
-          inputMode="none" // Prevent mobile keyboard
-          value={inputVal}
-          onChange={() => {}}
-          onKeyDown={handleKeyDown}
-          className="absolute opacity-0 pointer-events-none"
-          autoFocus
-        />
-
-        <motion.div
-          key={currentCard.id} // Re-animate entry for new card? Optional. Let's just animate scaling.
-          animate={isSuccess ? { scale: 1.05 } : { scale: 1 }}
-          transition={isSuccess ? { duration: 0.15, ease: "easeOut" } : { duration: 0 }}
-          className={`w-full flex flex-col items-center justify-center ${isError ? 'animate-shake' : ''}`}
-        >
-          <div className="text-[100px] sm:text-[120px] font-bold text-white tracking-tighter leading-none mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-            {currentCard.question}
-          </div>
-          
-          <div className="h-24 w-full flex items-center justify-center">
-            <span className={`text-[80px] font-mono font-bold leading-none ${isSuccess ? 'text-[var(--primary)] drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]' : isError ? 'text-[#FF453A] drop-shadow-[0_0_20px_rgba(255,69,58,0.5)]' : 'text-gray-400'}`}>
-              {inputVal || "_"}
-            </span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Custom Numpad */}
-      <div className="w-full grid grid-cols-3 gap-3 mb-safe">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-          <button
-            key={num}
-            onPointerDown={(e) => { e.preventDefault(); handleNumpadClick(num.toString()); }}
-            className="h-16 text-3xl font-semibold bg-[#2A2E36] hover:bg-[#343943] active:bg-white/20 active:scale-95 text-white rounded-xl transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 touch-none cursor-pointer"
+      <AnimatePresence mode="wait">
+        
+        {/* ===================== ACTIVE GAME ===================== */}
+        {!isGameOver && currentCard && (
+          <motion.div
+            key="game"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex flex-col items-center justify-between p-4 pb-8 h-[100dvh] w-full max-w-sm mx-auto z-10"
           >
-            {num}
-          </button>
-        ))}
-        <div className="h-16 pointer-events-none"></div>
-        <button
-          onPointerDown={(e) => { e.preventDefault(); handleNumpadClick("0"); }}
-          className="h-16 text-3xl font-semibold bg-[#2A2E36] hover:bg-[#343943] active:bg-white/20 active:scale-95 text-white rounded-xl transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 touch-none cursor-pointer"
-        >
-          0
-        </button>
-        <button
-          onPointerDown={(e) => { e.preventDefault(); handleNumpadClick("backspace"); }}
-          className="h-16 flex items-center justify-center bg-[#2A2E36] hover:bg-[#343943] active:bg-white/20 active:scale-95 text-gray-400 rounded-xl transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 touch-none cursor-pointer"
-        >
-          <X className="w-8 h-8" />
-        </button>
-      </div>
+            {/* Header */}
+            <div className="w-full flex items-center justify-between mt-4">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5 shadow-sm">
+                <Clock className={`w-4 h-4 transition-colors duration-300 ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-400'}`} />
+                <span className={`font-mono font-bold transition-colors duration-300 ${timeLeft <= 10 ? 'text-red-500' : 'text-white'}`}>
+                  00:{timeLeft.toString().padStart(2, '0')}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-300 ${
+                      i < difficulty 
+                        ? 'bg-[#00FF9D] shadow-[0_0_8px_rgba(0,255,157,0.8)] scale-110' 
+                        : 'bg-white/10'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5 shadow-sm flex items-center gap-2">
+                <Zap className="w-4 h-4 text-[#00FF9D]" />
+                <span className="font-bold text-white">{score}</span>
+              </div>
+            </div>
+
+            {/* Main Card Area */}
+            <div className="flex-1 flex flex-col items-center justify-center w-full relative">
+              <input 
+                ref={inputRef}
+                type="text" 
+                inputMode="none"
+                value={inputVal}
+                onChange={() => {}}
+                onKeyDown={handleKeyDown}
+                className="absolute opacity-0 pointer-events-none"
+                autoFocus
+              />
+
+              <motion.div
+                key={currentCard.id}
+                animate={isSuccess ? { scale: 1.05 } : { scale: 1 }}
+                transition={isSuccess ? { duration: 0.15, ease: "easeOut" } : { duration: 0 }}
+                className={`w-full flex flex-col items-center justify-center ${isError ? 'animate-shake' : ''}`}
+              >
+                <div className="text-[100px] sm:text-[120px] font-bold text-white tracking-tighter leading-none mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                  {currentCard.question}
+                </div>
+                
+                <div className="h-24 w-full flex items-center justify-center">
+                  <span className={`text-[80px] font-mono font-bold leading-none transition-colors duration-200 ${
+                    isSuccess 
+                      ? 'text-[#00FF9D] drop-shadow-[0_0_20px_rgba(0,255,157,0.5)]' 
+                      : isError 
+                        ? 'text-[#FF453A] drop-shadow-[0_0_20px_rgba(255,69,58,0.5)]' 
+                        : 'text-gray-400'
+                  }`}>
+                    {inputVal || "_"}
+                  </span>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Custom Numpad (Mobile Only) */}
+            <div className="w-full grid grid-cols-3 gap-3 mb-safe md:hidden">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <button
+                  key={num}
+                  onPointerDown={(e) => { e.preventDefault(); handleNumpadClick(num.toString()); }}
+                  className="h-16 text-3xl font-semibold bg-[#2A2E36]/80 hover:bg-[#343943] active:bg-white/20 active:scale-95 text-white rounded-2xl transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 touch-none cursor-pointer backdrop-blur-md"
+                >
+                  {num}
+                </button>
+              ))}
+              <div className="h-16 pointer-events-none"></div>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleNumpadClick("0"); }}
+                className="h-16 text-3xl font-semibold bg-[#2A2E36]/80 hover:bg-[#343943] active:bg-white/20 active:scale-95 text-white rounded-2xl transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 touch-none cursor-pointer backdrop-blur-md"
+              >
+                0
+              </button>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleNumpadClick("backspace"); }}
+                className="h-16 flex items-center justify-center bg-[#2A2E36]/80 hover:bg-[#343943] active:bg-white/20 active:scale-95 text-gray-400 rounded-2xl transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-y-1 touch-none cursor-pointer backdrop-blur-md"
+              >
+                <X className="w-8 h-8" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ===================== GAME OVER ===================== */}
+        {isGameOver && (
+          <motion.div
+            key="game-over"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex-1 flex flex-col items-center justify-center w-full z-10 px-4"
+          >
+            <div className="mynt-card p-8 w-full max-w-md text-center space-y-8 relative overflow-hidden">
+              
+              {/* Premium Glow effect behind the trophy (removed) */}
+
+              <motion.div variants={itemVariants} className="w-20 h-20 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)] flex items-center justify-center mx-auto relative z-10">
+                <Trophy className="w-10 h-10 text-[var(--primary)]" />
+              </motion.div>
+              
+              <motion.div variants={itemVariants} className="relative z-10">
+                <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                  Calibration Complete
+                </h2>
+                <p className="text-zinc-400">Your cognitive baseline has been logged.</p>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 relative z-10">
+                
+                {/* Score */}
+                <div className="bg-zinc-900/50 p-5 rounded-2xl border border-zinc-800/50 relative overflow-hidden group hover:border-zinc-700 transition-colors">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-zinc-500" />
+                    <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Score</div>
+                  </div>
+                  <div className="text-4xl font-bold text-white">{score}</div>
+                </div>
+
+                {/* Accuracy */}
+                <div className="bg-[var(--primary)]/5 p-5 rounded-2xl border border-[var(--primary)]/20 relative overflow-hidden shadow-[inset_0_0_20px_rgba(var(--primary-rgb),0.05)]">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-[var(--primary)]" />
+                    <div className="text-xs font-bold text-[var(--primary)] uppercase tracking-widest">Accuracy</div>
+                  </div>
+                  <div className="text-4xl font-bold text-white">{accuracy}%</div>
+                </div>
+
+                {/* Avg Speed */}
+                <div className="bg-zinc-900/50 p-5 rounded-2xl border border-zinc-800/50 relative overflow-hidden group hover:border-zinc-700 transition-colors">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Clock className="w-4 h-4 text-zinc-500" />
+                    <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Speed</div>
+                  </div>
+                  <div className="text-3xl font-bold text-white mt-1">{avgVelocity}<span className="text-lg text-zinc-500 ml-1">s</span></div>
+                </div>
+
+                {/* Max Tier */}
+                <div className="bg-zinc-900/50 p-5 rounded-2xl border border-zinc-800/50 relative overflow-hidden group hover:border-zinc-700 transition-colors">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Trophy className="w-4 h-4 text-zinc-500" />
+                    <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Max Tier</div>
+                  </div>
+                  <div className="text-3xl font-bold text-white mt-1">Lvl {maxDifficultyReached}</div>
+                </div>
+
+              </motion.div>
+
+              <motion.button 
+                variants={itemVariants}
+                onClick={handleComplete}
+                disabled={isSaving}
+                className="w-full flex items-center justify-center gap-2 py-4 btn-glow-green text-black font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 relative z-10"
+              >
+                {isSaving ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Syning Data...</>
+                ) : (
+                  <>Continue to Dashboard <ArrowRight className="w-5 h-5" /></>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
     </div>
   );
 }
