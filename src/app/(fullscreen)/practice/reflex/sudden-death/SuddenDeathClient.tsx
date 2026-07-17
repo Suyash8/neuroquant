@@ -230,7 +230,7 @@ export default function SuddenDeathClient({
       </div>
 
       {/* Custom Numpad */}
-      <div className="w-full max-w-sm grid grid-cols-3 gap-3 mb-safe">
+      <div className="w-full max-w-sm grid grid-cols-3 gap-3 mb-safe md:hidden">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
           <button
             key={num}
