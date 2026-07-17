@@ -16,6 +16,7 @@ model User {
   globalStreak      Int      @default(0)
   totalPoints       Int      @default(0)
   onboarded         Boolean  @default(false)
+  username          String?  @unique
   displayName       String?
   lastSessionDate   DateTime?
   streakFreezes     Int      @default(0)

@@ -5,7 +5,8 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function completeOnboarding(
   persona: string,
-  horizon: string
+  horizon: string,
+  username: string
 ) {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -23,10 +24,12 @@ export async function completeOnboarding(
         id: authUser.id,
         email: authUser.email!,
         persona,
+        username,
         onboarded: true,
       },
       update: {
         persona,
+        username,
         onboarded: true,
       },
     });
