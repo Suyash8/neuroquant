@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Settings, Users, CreditCard, Sparkles, Trophy, LogOut, MessageSquare } from "lucide-react";
 import { useGlobalStore } from "@/store/global";
 import { createBrowserClient } from "@supabase/ssr";
+import { Avatar } from "@/components/ui/Avatar";
 
 export function UserDropdown() {
   const user = useGlobalStore((state) => state.user);
@@ -38,7 +39,6 @@ export function UserDropdown() {
     { label: "Referral", icon: Users, href: "/settings/referral" },
     { label: "Subscription", icon: CreditCard, href: "/settings/subscription" },
     { label: "Leaderboard", icon: Trophy, href: "/leaderboard" },
-    // { label: "What's new", icon: Sparkles, href: "/settings/changelog", highlight: true },
     { label: "Feedback / Support", icon: MessageSquare, href: "/settings/support" },
   ];
 
@@ -49,10 +49,10 @@ export function UserDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center ml-2 border border-zinc-800 hover:border-[#00FF9D]/50 transition-colors relative overflow-hidden group shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+        className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center ml-2 border border-zinc-800 hover:border-primary/50 transition-colors relative overflow-hidden group shadow-[0_0_10px_rgba(0,0,0,0.5)]"
       >
-        <div className="absolute inset-0 bg-[#00FF9D]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-        <span className="text-sm font-bold text-zinc-300 group-hover:text-[#00FF9D] transition-colors">
+        <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className="text-sm font-bold text-zinc-300 group-hover:text-primary transition-colors uppercase">
           {user?.persona === "quant" ? "Q" : user?.persona === "generalist" ? "G" : "U"}
         </span>
       </motion.button>
@@ -70,16 +70,12 @@ export function UserDropdown() {
             {/* User Info Header */}
             <div className="p-4 border-b border-white/5 bg-white/[0.02]">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00FF9D]/20 to-blue-500/20 border border-[#00FF9D]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,157,0.15)]">
-                  <span className="text-lg font-bold text-white">
-                    {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
-                  </span>
-                </div>
+                <Avatar size="md" />
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-white leading-tight">
                     {user?.displayName || "Operator"}
                   </span>
-                  <span className="text-xs text-[#00FF9D] mt-0.5 font-medium">
+                  <span className="text-xs text-primary mt-0.5 font-medium">
                     @{user?.username || "user"}
                   </span>
                 </div>
@@ -98,11 +94,6 @@ export function UserDropdown() {
                       <item.icon className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
                     </div>
                     {item.label}
-                    {/* {item.highlight && (
-                      <span className="ml-auto text-[9px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">
-                        New
-                      </span>
-                    )} */}
                   </motion.div>
                 </Link>
               ))}

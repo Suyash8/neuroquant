@@ -4,7 +4,11 @@ import { useState, useTransition } from "react";
 import { updateSettings } from "@/actions/updateSettings";
 import { Settings, Volume2, Smartphone, AlertTriangle, Loader2, CheckCircle2, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useGlobalStore } from "@/store/global";
+import { PageContainer, PageHeader } from "@/components/layout/PageContainer";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Toggle } from "@/components/ui/Toggle";
+import { Slider } from "@/components/ui/Slider";
+import { Button } from "@/components/ui/Button";
 
 export default function SettingsClient({ initialSettings }: { initialSettings: any }) {
   const router = useRouter();
@@ -17,17 +21,6 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
     soundEnabled: initialSettings.soundEnabled,
     hapticEnabled: initialSettings.hapticEnabled,
   });
-
-  const globalUser = useGlobalStore((state) => state.user);
-  const isQuant = globalUser?.persona === "quant";
-  
-  const activeColor = isQuant ? "bg-[#00FF9D]" : "bg-orange-500";
-  const glowColor = isQuant ? "shadow-[0_0_30px_rgba(0,255,157,0.1)]" : "shadow-[0_0_30px_rgba(249,115,22,0.1)]";
-  const hoverBorder = isQuant ? "hover:border-[#00FF9D]/30" : "hover:border-orange-500/30";
-  const focusBorder = isQuant ? "focus:border-[#00FF9D]/50 focus:shadow-[0_0_15px_rgba(0,255,157,0.1)]" : "focus:border-orange-500/50 focus:shadow-[0_0_15px_rgba(249,115,22,0.1)]";
-  const textActive = isQuant ? "text-[#00FF9D]" : "text-orange-500";
-  const bgActiveMuted = isQuant ? "bg-[#00FF9D]/10" : "bg-orange-500/10";
-  const borderActiveMuted = isQuant ? "border-[#00FF9D]/20" : "border-orange-500/20";
 
   const handleChange = (key: string, value: any) => {
     const newForm = { ...form, [key]: value };
@@ -55,32 +48,33 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
     });
   };
 
+  const SaveIndicator = (
+    <>
+      {saveStatus === "saving" && (
+        <span className="flex items-center gap-2 text-zinc-400 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 text-sm">
+          <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+        </span>
+      )}
+      {saveStatus === "saved" && (
+        <span className="flex items-center gap-2 text-primary bg-primary/10 px-3 py-1.5 rounded-full animate-in fade-in slide-in-from-right-2 border border-primary/20 text-sm">
+          <CheckCircle2 className="w-4 h-4" /> Saved
+        </span>
+      )}
+    </>
+  );
+
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 pb-32">
-      <header className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-black tracking-tight text-white">System Settings</h1>
-          <p className="text-zinc-400 font-medium text-lg">Configure preferences and engine parameters.</p>
-        </div>
-        
-        <div className="flex items-center gap-2 text-sm font-bold">
-          {saveStatus === "saving" && (
-            <span className="flex items-center gap-2 text-zinc-400 bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
-              <Loader2 className="w-4 h-4 animate-spin" /> Saving...
-            </span>
-          )}
-          {saveStatus === "saved" && (
-            <span className={`flex items-center gap-2 ${textActive} ${bgActiveMuted} px-3 py-1.5 rounded-full animate-in fade-in slide-in-from-right-2 border ${borderActiveMuted}`}>
-              <CheckCircle2 className="w-4 h-4" /> Saved
-            </span>
-          )}
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader 
+        title="System Settings" 
+        description="Configure preferences and engine parameters."
+        action={SaveIndicator}
+      />
 
       <div className="space-y-6">
         
         {/* Engine Section */}
-        <section className={`p-8 rounded-[2rem] bg-white/[0.015] border border-white/5 backdrop-blur-2xl transition-all duration-500 ${glowColor} ${hoverBorder}`}>
+        <GlassPanel hoverGlow className="p-8">
           <div className="flex items-center gap-3 border-b border-white/5 pb-6 mb-6">
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
               <Settings className="w-5 h-5 text-zinc-400" />
@@ -94,12 +88,7 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 <div className="font-bold text-white tracking-wide">Commutativity Training</div>
                 <div className="text-sm font-medium text-zinc-400 mt-1">Show both 3×7 and 7×3 as separate discrete flashcards.</div>
               </div>
-              <button
-                onClick={() => handleChange("commutativity", !form.commutativity)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors border border-white/10 shadow-inner ${form.commutativity ? activeColor : 'bg-[#050505]'}`}
-              >
-                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.commutativity ? 'translate-x-7' : 'translate-x-1'}`} />
-              </button>
+              <Toggle checked={form.commutativity} onChange={(v) => handleChange("commutativity", v)} />
             </div>
 
             <div className="space-y-3">
@@ -108,7 +97,7 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                 <select
                   value={form.horizon}
                   onChange={(e) => handleChange("horizon", e.target.value)}
-                  className={`w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-4 text-white font-medium focus:outline-none transition-all duration-300 appearance-none ${focusBorder}`}
+                  className="w-full bg-[#050505] border border-white/10 rounded-xl px-4 py-4 text-white font-medium focus:outline-none transition-all duration-300 appearance-none focus:border-primary/50 focus:shadow-primary-glow"
                 >
                   <option value="14_days">14 Days (Aggressive)</option>
                   <option value="30_days">30 Days (Standard)</option>
@@ -123,27 +112,20 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <label className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Daily Volume Quota</label>
-                <span className={`text-xl font-black ${textActive} tracking-tighter`}>{form.dailyGoal} <span className="text-sm font-bold text-zinc-500">cards</span></span>
+                <span className="text-xl font-black text-primary tracking-tighter">{form.dailyGoal} <span className="text-sm font-bold text-zinc-500">cards</span></span>
               </div>
-              <input 
-                type="range" 
-                min="10" 
-                max="200" 
-                step="5"
+              <Slider 
+                min={10} max={200} step={5}
                 value={form.dailyGoal}
-                onChange={(e) => setForm({ ...form, dailyGoal: parseInt(e.target.value) })}
-                onPointerUp={() => handleChange("dailyGoal", form.dailyGoal)}
-                className="w-full h-2 bg-[#050505] rounded-lg appearance-none cursor-pointer border border-white/5"
-                style={{
-                  accentColor: isQuant ? '#00FF9D' : '#f97316'
-                }}
+                onChangeValue={(v) => setForm({ ...form, dailyGoal: v })}
+                onCommit={(v) => handleChange("dailyGoal", v)}
               />
             </div>
           </div>
-        </section>
+        </GlassPanel>
 
         {/* Interface Section */}
-        <section className={`p-8 rounded-[2rem] bg-white/[0.015] border border-white/5 backdrop-blur-2xl transition-all duration-500 ${glowColor} ${hoverBorder}`}>
+        <GlassPanel hoverGlow className="p-8">
           <div className="flex items-center gap-3 border-b border-white/5 pb-6 mb-6">
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
               <Smartphone className="w-5 h-5 text-zinc-400" />
@@ -162,12 +144,7 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                   <div className="text-sm font-medium text-zinc-400 mt-1">Play mechanical ticks on input.</div>
                 </div>
               </div>
-              <button
-                onClick={() => handleChange("soundEnabled", !form.soundEnabled)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors border border-white/10 shadow-inner ${form.soundEnabled ? activeColor : 'bg-[#050505]'}`}
-              >
-                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.soundEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
-              </button>
+              <Toggle checked={form.soundEnabled} onChange={(v) => handleChange("soundEnabled", v)} />
             </div>
 
             <div className="flex items-center justify-between">
@@ -180,18 +157,13 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
                   <div className="text-sm font-medium text-zinc-400 mt-1">Vibrate device on incorrect answers (Mobile only).</div>
                 </div>
               </div>
-              <button
-                onClick={() => handleChange("hapticEnabled", !form.hapticEnabled)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors border border-white/10 shadow-inner ${form.hapticEnabled ? activeColor : 'bg-[#050505]'}`}
-              >
-                <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform ${form.hapticEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
-              </button>
+              <Toggle checked={form.hapticEnabled} onChange={(v) => handleChange("hapticEnabled", v)} />
             </div>
           </div>
-        </section>
+        </GlassPanel>
 
         {/* Diagnostic Section */}
-        <section className={`p-8 rounded-[2rem] bg-white/[0.015] border border-white/5 backdrop-blur-2xl transition-all duration-500 ${glowColor} ${hoverBorder}`}>
+        <GlassPanel hoverGlow className="p-8">
           <div className="flex items-center gap-3 border-b border-white/5 pb-6 mb-6">
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
               <Zap className="w-5 h-5 text-zinc-400" />
@@ -204,17 +176,14 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
               <div className="font-bold text-white tracking-wide">Retake Baseline Diagnostic</div>
               <div className="text-sm font-medium text-zinc-400 mt-1">Recalibrate your difficulty tier and update your granular profile.</div>
             </div>
-            <button 
-              onClick={() => router.push("/practice/diagnostic?source=settings")}
-              className={`px-6 py-3 ${bgActiveMuted} ${textActive} font-black uppercase tracking-widest rounded-xl transition-all border ${borderActiveMuted} hover:scale-[1.02] active:scale-95 whitespace-nowrap`}
-            >
+            <Button onClick={() => router.push("/practice/diagnostic?source=settings")}>
               Run Diagnostic
-            </button>
+            </Button>
           </div>
-        </section>
+        </GlassPanel>
 
         {/* Danger Zone */}
-        <section className="p-8 rounded-[2rem] bg-red-500/[0.02] border border-red-500/10 backdrop-blur-2xl transition-all duration-500 hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)]">
+        <GlassPanel danger interactive className="p-8">
           <div className="flex items-center gap-3 border-b border-red-500/10 pb-6 mb-6">
             <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shadow-inner">
               <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -227,13 +196,13 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
               <div className="font-bold text-white tracking-wide">Wipe Progression Data</div>
               <div className="text-sm font-medium text-zinc-400 mt-1">Permanently delete all neural mappings, streaks, and history.</div>
             </div>
-            <button className="px-6 py-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 font-black uppercase tracking-widest rounded-xl transition-all border border-red-500/20 hover:scale-[1.02] active:scale-95 whitespace-nowrap">
+            <Button variant="danger">
               Reset Progress
-            </button>
+            </Button>
           </div>
-        </section>
+        </GlassPanel>
 
       </div>
-    </div>
+    </PageContainer>
   );
 }

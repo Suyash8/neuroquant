@@ -7,15 +7,13 @@ import {
   Gamepad2, Medal, Crown
 } from "lucide-react";
 import Link from "next/link";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { Button } from "@/components/ui/Button";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Avatar } from "@/components/ui/Avatar";
 
 export default function ProfileClient({ user }: { user: any }) {
   const isQuant = user.persona === "quant";
-  const personaColor = isQuant ? "from-[#00FF9D]/40 to-[#00FF9D]/0" : "from-orange-500/40 to-orange-500/0";
-  const personaColorSubtle = isQuant ? "from-[#00FF9D]/10 to-transparent" : "from-orange-500/10 to-transparent";
-  const personaText = isQuant ? "text-[#00FF9D]" : "text-orange-500";
-  const personaBorder = isQuant ? "border-[#00FF9D]/40" : "border-orange-500/40";
-  const personaGlow = isQuant ? "shadow-[0_0_60px_rgba(0,255,157,0.25)]" : "shadow-[0_0_60px_rgba(249,115,22,0.25)]";
-  const bgGlow = isQuant ? "bg-[#00FF9D]/5" : "bg-orange-500/5";
 
   // Tier Calculation
   const pts = user.totalPoints || 0;
@@ -56,34 +54,25 @@ export default function ProfileClient({ user }: { user: any }) {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className={`relative w-full rounded-[2.5rem] overflow-hidden border border-white/10 ${bgGlow} backdrop-blur-3xl`}
+        className="relative w-full rounded-[2.5rem] overflow-hidden border border-white/10 bg-primary/5 backdrop-blur-3xl"
       >
         {/* Deep ambient lighting */}
-        <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-b ${personaColorSubtle} pointer-events-none`} />
-        <div className={`absolute top-[-50%] left-[-10%] w-[50%] h-[150%] bg-gradient-to-r ${personaColor} blur-[120px] opacity-30 pointer-events-none`} />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
+        <div className="absolute top-[-50%] left-[-10%] w-[50%] h-[150%] bg-gradient-to-r from-primary/40 to-transparent blur-[120px] opacity-30 pointer-events-none" />
         
         <div className="relative z-10 p-8 md:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-12">
           
           {/* Left: Identity */}
           <div className="flex items-center gap-8">
-            <div className="relative group">
-              <div className={`absolute inset-0 bg-gradient-to-br ${personaColor} blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-500 rounded-full`} />
-              <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full bg-[#050505] border-[4px] ${personaBorder} ${personaGlow} flex items-center justify-center relative z-10 overflow-hidden`}>
-                <span className={`text-5xl md:text-6xl font-black ${personaText} tracking-tighter`}>
-                  {user.username ? user.username.charAt(0).toUpperCase() : "U"}
-                </span>
-                {/* Glossy overlay */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20" />
-              </div>
-            </div>
+            <Avatar size="xl" />
             
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-2xl">
                   @{user.username || "operator"}
                 </h1>
-                <div className={`px-3 py-1 rounded-full border border-white/10 bg-black/40 backdrop-blur-md flex items-center gap-1.5`}>
-                  <div className={`w-2 h-2 rounded-full ${isQuant ? 'bg-[#00FF9D]' : 'bg-orange-500'} animate-pulse`} />
+                <div className="px-3 py-1 rounded-full border border-white/10 bg-black/40 backdrop-blur-md flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">
                     {isQuant ? 'Quant' : 'Gen'}
                   </span>
@@ -95,10 +84,10 @@ export default function ProfileClient({ user }: { user: any }) {
               
               <div className="pt-4 flex items-center gap-4">
                 <Link href="/settings/account">
-                  <button className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-bold transition-all flex items-center gap-2 group shadow-lg shadow-black/20">
+                  <Button variant="secondary" size="sm" className="gap-2 group">
                     <Edit2 className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
                     Edit Profile
-                  </button>
+                  </Button>
                 </Link>
                 <div className="text-sm font-medium text-zinc-500">
                   Joined {joinDate}
@@ -117,7 +106,7 @@ export default function ProfileClient({ user }: { user: any }) {
             </div>
             <div className="space-y-1">
               <div className="text-sm font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                <Zap className={`w-4 h-4 ${personaText}`} /> Velocity
+                <Zap className="w-4 h-4 text-primary" /> Velocity
               </div>
               <div className="text-4xl font-black text-white tracking-tighter flex items-baseline gap-1">
                 {avgVelocity ? avgVelocity : "--"} <span className="text-lg text-zinc-500 font-bold">ms</span>
@@ -145,8 +134,8 @@ export default function ProfileClient({ user }: { user: any }) {
         <motion.div variants={fadeUp} className="lg:col-span-2 space-y-6">
           
           {/* Progression Panel */}
-          <div className="p-8 rounded-[2rem] bg-white/[0.015] border border-white/5 backdrop-blur-2xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <GlassPanel className="p-8 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             
             <div className="relative z-10">
               <div className="flex justify-between items-end mb-6">
@@ -164,43 +153,32 @@ export default function ProfileClient({ user }: { user: any }) {
                   <span className="text-purple-400">{tier}</span>
                   <span>{nextTierPts} PTS to {nextTier}</span>
                 </div>
-                {/* Cinematic Progress Bar */}
-                <div className="h-3 w-full bg-[#050505] rounded-full overflow-hidden border border-white/5 relative shadow-inner">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-                    className="h-full bg-gradient-to-r from-purple-600 to-blue-400 rounded-full relative"
-                  >
-                    {/* Glowing Head */}
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_#fff,0_0_20px_#60a5fa] blur-[1px]" />
-                  </motion.div>
-                </div>
+                <ProgressBar progress={progress} className="h-3 rounded-full bg-[#050505] shadow-inner" />
               </div>
             </div>
-          </div>
+          </GlassPanel>
 
           {/* Active Modules Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Link href="/practice/reflex">
-              <div className="p-6 rounded-[2rem] bg-white/[0.015] border border-white/5 hover:border-[#00FF9D]/30 backdrop-blur-2xl transition-all duration-500 group relative overflow-hidden h-full flex flex-col justify-between hover:shadow-[0_0_30px_rgba(0,255,157,0.1)] hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FF9D]/10 blur-[50px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <GlassPanel interactive hoverGlow className="p-6 group h-full flex flex-col justify-between hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-inner group-hover:border-[#00FF9D]/30 group-hover:bg-[#00FF9D]/10 transition-colors">
-                    <Zap className="w-6 h-6 text-[#00FF9D]" />
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 shadow-inner group-hover:border-primary/30 group-hover:bg-primary/10 transition-colors">
+                    <Zap className="w-6 h-6 text-primary" />
                   </div>
                   <h4 className="text-2xl font-black text-white tracking-tight mb-2">Reflex Engine</h4>
                   <p className="text-sm font-medium text-zinc-400">High-frequency arithmetic and speed drills.</p>
                 </div>
-                <div className="relative z-10 mt-6 flex items-center gap-2 text-sm font-bold text-[#00FF9D] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0">
+                <div className="relative z-10 mt-6 flex items-center gap-2 text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-[-10px] group-hover:translate-x-0">
                   Initialize <ChevronRight className="w-4 h-4" />
                 </div>
-              </div>
+              </GlassPanel>
             </Link>
 
             <div className="grid grid-rows-2 gap-6">
               <Link href="/practice/logic">
-                <div className="p-5 rounded-[1.5rem] bg-white/[0.015] border border-white/5 hover:border-purple-500/30 backdrop-blur-2xl transition-all duration-500 group relative overflow-hidden h-full flex items-center justify-between hover:shadow-[0_0_30px_rgba(168,85,247,0.1)] hover:-translate-y-1">
+                <GlassPanel interactive className="p-5 group h-full flex items-center justify-between hover:border-purple-500/30 hover:shadow-[0_0_30px_rgba(168,85,247,0.1)] hover:-translate-y-1">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 blur-[40px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative z-10">
                     <h4 className="text-lg font-black text-white tracking-tight mb-1">Logic Core</h4>
@@ -209,11 +187,11 @@ export default function ProfileClient({ user }: { user: any }) {
                   <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-purple-500/30 group-hover:bg-purple-500/10 transition-colors relative z-10">
                     <Target className="w-5 h-5 text-purple-400" />
                   </div>
-                </div>
+                </GlassPanel>
               </Link>
 
               <Link href="/practice/probability">
-                <div className="p-5 rounded-[1.5rem] bg-white/[0.015] border border-white/5 hover:border-orange-500/30 backdrop-blur-2xl transition-all duration-500 group relative overflow-hidden h-full flex items-center justify-between hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] hover:-translate-y-1">
+                <GlassPanel interactive className="p-5 group h-full flex items-center justify-between hover:border-orange-500/30 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] hover:-translate-y-1">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 blur-[40px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative z-10">
                     <h4 className="text-lg font-black text-white tracking-tight mb-1">Risk Lab</h4>
@@ -222,7 +200,7 @@ export default function ProfileClient({ user }: { user: any }) {
                   <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner group-hover:border-orange-500/30 group-hover:bg-orange-500/10 transition-colors relative z-10">
                     <Activity className="w-5 h-5 text-orange-500" />
                   </div>
-                </div>
+                </GlassPanel>
               </Link>
             </div>
           </div>
@@ -232,7 +210,7 @@ export default function ProfileClient({ user }: { user: any }) {
         <motion.div variants={fadeUp} className="space-y-6">
           
           {/* Diagnostic Baseline */}
-          <div className="p-8 rounded-[2rem] bg-white/[0.015] border border-white/5 backdrop-blur-2xl relative overflow-hidden">
+          <GlassPanel className="p-8">
             <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-6 flex items-center gap-2">
               <Medal className="w-4 h-4 text-zinc-400" /> Baseline Metric
             </h3>
@@ -256,16 +234,16 @@ export default function ProfileClient({ user }: { user: any }) {
                 </div>
                 <p className="text-sm text-zinc-400 font-medium">Calibrate your engine to establish a baseline.</p>
                 <Link href="/practice/diagnostic">
-                  <button className="px-5 py-2.5 rounded-xl bg-[#00FF9D]/10 text-[#00FF9D] text-sm font-bold hover:bg-[#00FF9D]/20 transition-colors w-full border border-[#00FF9D]/20">
+                  <Button className="w-full">
                     Run Diagnostic
-                  </button>
+                  </Button>
                 </Link>
               </div>
             )}
-          </div>
+          </GlassPanel>
 
           {/* Achievements Vault */}
-          <div className="p-8 rounded-[2rem] bg-white/[0.015] border border-white/5 backdrop-blur-2xl">
+          <GlassPanel className="p-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">The Vault</h3>
               <span className="text-xs font-bold text-zinc-600 bg-white/5 px-2 py-1 rounded-md">Locked</span>
@@ -279,7 +257,7 @@ export default function ProfileClient({ user }: { user: any }) {
                 </div>
               ))}
             </div>
-          </div>
+          </GlassPanel>
 
         </motion.div>
       </motion.div>

@@ -6,6 +6,7 @@ import { Brain, LayoutDashboard, Settings, Trophy, Activity, LogOut, Users, Book
 import { useGlobalStore } from "@/store/global";
 import { createBrowserClient } from '@supabase/ssr'
 import { Logo } from "@/components/ui/Logo";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 
 export function Sidebar() {
   const user = useGlobalStore(state => state.user);
@@ -35,8 +36,8 @@ export function Sidebar() {
 
   const NavItem = ({ item }: { item: any }) => {
     // If it's the dashboard, exact match. Otherwise prefix match.
-    const isActive = item.href === "/" 
-      ? pathname === "/" 
+    const isActive = item.href === "/"
+      ? pathname === "/"
       : pathname?.startsWith(item.href);
 
     return (
@@ -44,15 +45,15 @@ export function Sidebar() {
         href={item.href}
         onClick={e => item.locked && e.preventDefault()}
         className={`flex items-center gap-3 px-4 py-2 text-sm font-medium transition-colors group relative ${
-          item.locked 
-            ? 'text-zinc-600 cursor-not-allowed' 
-            : isActive 
-              ? 'text-primary' 
+          item.locked
+            ? 'text-zinc-600 cursor-not-allowed'
+            : isActive
+              ? 'text-primary'
               : 'text-zinc-400 hover:text-white'
         }`}
       >
         {isActive && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full shadow-primary-glow" />
         )}
         <item.icon className={`w-4 h-4 ${item.locked ? 'opacity-50' : isActive ? 'text-primary' : 'group-hover:text-white transition-colors'}`} />
         {item.name}
@@ -71,7 +72,6 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 py-4 flex flex-col gap-8 overflow-y-auto">
-        
         <div>
           <div className="flex flex-col gap-1">
             {globalItems.map((item) => <NavItem key={item.name} item={item} />)}
@@ -84,11 +84,10 @@ export function Sidebar() {
             {practiceItems.map((item) => <NavItem key={item.name} item={item} />)}
           </div>
         </div>
-
       </nav>
 
       <div className="p-4 mt-auto">
-        <div className="mynt-card p-4 relative group hover:border-primary/50 transition-colors">
+        <GlassPanel interactive hoverGlow className="p-4 relative group">
           <button onClick={handleLogout} className="absolute top-2 right-2 text-zinc-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
             <LogOut className="w-4 h-4" />
           </button>
@@ -103,7 +102,7 @@ export function Sidebar() {
           <div className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">New • Referral</div>
           <div className="text-sm font-semibold text-white leading-tight">Invite friends, earn premium</div>
           <div className="text-xs text-zinc-400 mt-1">Free Pro days for every signup.</div>
-        </div>
+        </GlassPanel>
       </div>
     </aside>
   );
