@@ -169,12 +169,12 @@ export default function DiagnosticClient({
       const accuracy = attempts > 0 ? (score / attempts) * 100 : 0;
       const avgVelocity = score > 0 ? totalVelocityMs / score : 0;
 
-      await saveDiagnosticResult(source, persona, horizon, {
+      await saveDiagnosticResult({ source, persona, horizon, metrics: {
         score,
         maxDifficultyReached,
         averageVelocityMs: avgVelocity,
         accuracy,
-      });
+      } });
 
       router.refresh();
       if (source === "settings") {

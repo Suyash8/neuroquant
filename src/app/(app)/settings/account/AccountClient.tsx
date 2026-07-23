@@ -36,13 +36,13 @@ export default function AccountClient({ user }: { user: any }) {
     startTransition(async () => {
       const res = await updateProfile(updatePayload);
       
-      if (res.error) {
+      if ("error" in res && res.error) {
         setMessage({ type: "error", text: res.error });
         if (field === "username") setUsername(user.username || "");
         if (field === "displayName") setDisplayName(user.displayName || "");
         if (field === "persona") setPersona(user.persona || "quant");
         setSaveStatus("idle");
-      } else if (res.success && res.user) {
+      } else if (!("error" in res) && res.success && res.user) {
         // Update global state
         if (globalUser) {
           setUser({

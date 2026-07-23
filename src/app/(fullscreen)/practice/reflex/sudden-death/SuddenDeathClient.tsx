@@ -122,7 +122,7 @@ export default function SuddenDeathClient({
   useEffect(() => {
     if (isGameOver && !isSaving) {
       setIsSaving(true);
-      saveSuddenDeath(score, logs).then(() => {
+      saveSuddenDeath({ score, logs }).then(() => {
         setIsSaving(false);
       });
     }

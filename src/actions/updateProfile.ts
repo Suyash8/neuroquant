@@ -1,41 +1,45 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
 import prisma from "@/lib/prisma";
+import { withAuthAction } from "@/lib/actions";
 
-export async function updateProfile(data: {
+interface UpdateProfilePayload {
   username?: string;
   displayName?: string;
   persona?: "quant" | "generalist";
-}) {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+}
 
-  if (error || !user) {
-    return { error: "Not authenticated" };
-  }
+interface UpdateProfileResponse {
+  success?: boolean;
+  user?: {
+    username: string | null;
+    displayName: string | null;
+    persona: string | null;
+  };
+}
 
-  try {
+export const updateProfile = withAuthAction<UpdateProfilePayload, UpdateProfileResponse>(
+  async (data, { user }) => {
     const updateData: any = {};
 
     // Validate and prepare username
     if (data.username !== undefined) {
       const cleanUsername = data.username.toLowerCase().replace(/[^a-z0-9_]/g, '');
       if (cleanUsername !== data.username.toLowerCase()) {
-        return { error: "Username can only contain letters, numbers, and underscores." };
-      }
-      
-      if (cleanUsername.length < 3) {
-        return { error: "Username must be at least 3 characters long." };
+        throw new Error("Username can only contain letters, numbers, and underscores.");
       }
 
+      if (cleanUsername.length < 3) {
+        throw new Error("Username must be at least 3 characters long.");
+      }
+      
       // Check uniqueness
       const existingUser = await prisma.user.findUnique({
         where: { username: cleanUsername }
       });
 
       if (existingUser && existingUser.id !== user.id) {
-        return { error: "Username is already taken." };
+        throw new Error("Username is already taken.");
       }
 
       updateData.username = cleanUsername;
@@ -57,16 +61,13 @@ export async function updateProfile(data: {
       data: updateData,
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       user: {
         username: updatedUser.username,
         displayName: updatedUser.displayName,
         persona: updatedUser.persona
       }
     };
-  } catch (err: any) {
-    console.error("Error updating profile:", err);
-    return { error: "An unexpected error occurred while saving your profile." };
   }
-}
+);
