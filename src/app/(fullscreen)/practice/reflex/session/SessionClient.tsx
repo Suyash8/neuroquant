@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReflexSessionStore, ReflexQuestion } from "@/store/reflex";
 import { X } from "lucide-react";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 export default function SpeedEngineSession({ userId, initialQuestions }: { userId: string, initialQuestions: ReflexQuestion[] }) {
   const router = useRouter();
-  const { 
+  const {
     isActive, queue, currentIndex, currentInput, startTime,
-    startSession, endSession, setInput, submitAnswer 
+    startSession, endSession, setInput, submitAnswer
   } = useReflexSessionStore();
 
   const [feedback, setFeedback] = useState<"neutral" | "correct" | "incorrect">("neutral");
-  
+
   // Ref for the timer display element to avoid React state re-renders
   const timerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(null);
@@ -80,8 +81,8 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
     if (newInput === currentQ.answer) {
       setFeedback("correct");
       submitAnswer(true, false);
-      
-      // Green flash is visible for ~120ms, then advance
+
+      // Flash is visible for ~120ms, then advance
       setTimeout(async () => {
         setFeedback("neutral");
         const state = useReflexSessionStore.getState();
@@ -96,7 +97,7 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
       // Wrong answer — digits match expected length, auto-clear
       setFeedback("incorrect");
       submitAnswer(false, true);
-      
+
       setTimeout(() => {
         setFeedback("neutral");
       }, 350); // Let the CSS shake animation (300ms) finish plus a beat
@@ -131,7 +132,7 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
 
   if (!isActive || !currentQ) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex items-center justify-center bg-black">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -140,8 +141,7 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
   const progressPct = ((currentIndex) / queue.length) * 100;
 
   return (
-    <div className="h-full flex flex-col bg-[#0F1115] relative overflow-hidden touch-manipulation select-none">
-      
+    <div className="h-full flex flex-col bg-black relative overflow-hidden touch-manipulation select-none">
       {/* Hidden input to trap focus and prevent native keyboard on mobile */}
       <input
         ref={hiddenInputRef}
@@ -155,17 +155,10 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
       />
 
       {/* Top Bar / Progress */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-white/10">
-        <motion.div 
-          className="h-full bg-primary"
-          initial={{ width: 0 }}
-          animate={{ width: `${progressPct}%` }}
-          transition={{ duration: 0.3 }}
-        />
-      </div>
+      <ProgressBar progress={progressPct} className="rounded-none absolute top-0 inset-x-0 h-1 bg-white/5" indicatorClassName="bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
 
-      <div className="absolute top-6 inset-x-6 flex justify-between items-center">
-        <button 
+      <div className="absolute top-6 inset-x-6 flex justify-between items-center z-10">
+        <button
           onClick={async () => {
             const state = useReflexSessionStore.getState();
             if (state.userId && state.logs.length > 0) {
@@ -180,64 +173,56 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
             }
             router.push("/practice/reflex");
           }}
-          className="text-gray-500 hover:text-white transition-colors"
+          className="text-zinc-500 hover:text-white transition-colors bg-white/5 p-2 rounded-full backdrop-blur-md border border-white/5"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
         {/* Ticking Timer */}
-        <div 
-          ref={timerRef} 
-          className="font-mono text-gray-400 font-medium tracking-wider"
+        <div
+          ref={timerRef}
+          className="font-mono text-zinc-400 font-medium tracking-wider bg-white/5 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/5 text-sm"
         >
           0.00s
         </div>
       </div>
 
       {/* Main Testing Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 mt-12">
-        
+      <div className="flex-1 flex flex-col items-center justify-center p-6 mt-12 relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQ.id}
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 1.05 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.1 }}
             className="text-center"
           >
             {/* The Question */}
-            <h1 className="text-7xl md:text-[9rem] font-mono font-bold tracking-tighter text-white mb-12">
+            <h1 className="text-7xl md:text-[9rem] font-mono font-bold tracking-tighter text-white mb-8">
               {currentQ.question}
             </h1>
           </motion.div>
         </AnimatePresence>
 
         {/* The Input Display */}
-        <motion.div
-          animate={feedback === "correct" ? { scale: 1.05 } : { scale: 1 }}
-          transition={feedback === "correct" ? { duration: 0.15, ease: "easeOut" } : { duration: 0 }}
-          className={`w-full flex flex-col items-center justify-center ${feedback === "incorrect" ? 'animate-shake' : ''}`}
-        >
-          <AnimatePresence mode="wait">
-            <div className="h-24 w-full flex items-center justify-center">
-              <span className={`text-[80px] font-mono font-bold leading-none ${feedback === "correct" ? 'text-[var(--primary)] drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]' : feedback === "incorrect" ? 'text-[#FF453A] drop-shadow-[0_0_20px_rgba(255,69,58,0.5)]' : 'text-gray-400'}`}>
-                {currentInput || "_"}
-              </span>
-            </div>
-          </AnimatePresence>
-        </motion.div>
-
+        <div className={`w-full flex flex-col items-center justify-center transition-transform ${feedback === "incorrect" ? 'animate-shake' : ''}`}>
+          <div className="h-24 w-full flex items-center justify-center">
+            <span className={`text-[80px] font-mono font-bold leading-none transition-colors ${feedback === "correct" ? 'text-primary drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]' : feedback === "incorrect" ? 'text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'text-zinc-400'}`}>
+              {currentInput || "_"}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Mobile Custom Numpad */}
-      <div className="md:hidden bg-[#0a0c10] border-t border-white/5 p-4 grid grid-cols-3 gap-3 pb-8">
+      <div className="md:hidden bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 p-4 grid grid-cols-3 gap-3 pb-8">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0].map((key, i) => (
           <button
             key={i}
             onClick={() => key === "⌫" ? handleBackspace() : handleInput(key.toString())}
             className={`
               h-16 rounded-2xl bg-white/5 flex items-center justify-center text-2xl font-semibold text-white
-              active:bg-white/10 active:scale-95 transition-all touch-manipulation
+              active:bg-white/10 active:scale-95 transition-all touch-manipulation shadow-sm border border-white/5
               ${key === "⌫" ? "text-red-400" : ""}
               ${key === 0 ? "col-start-2" : ""}
             `}
@@ -246,7 +231,6 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
           </button>
         ))}
       </div>
-
     </div>
   );
 }

@@ -7,6 +7,9 @@ import { completeOnboarding } from "@/actions/completeOnboarding";
 import { checkUsernameAvailability } from "@/actions/checkUsername";
 import { Logo } from "@/components/ui/Logo";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 type Step = 1 | 2 | 3 | 4;
 type Persona = "quant" | "generalist" | null;
@@ -18,187 +21,149 @@ interface SelectionCardProps {
   icon: React.ReactNode;
   isActive: boolean;
   onClick: () => void;
-  colorBase: string; // e.g. "0, 255, 157" for quant
+  colorClass: string;
 }
 
-function SelectionCard({ title, description, icon, isActive, onClick, colorBase }: SelectionCardProps) {
+function SelectionCard({ title, description, icon, isActive, onClick, colorClass }: SelectionCardProps) {
   return (
-    <button
+    <Card
       onClick={onClick}
       className={`
-        relative p-4 rounded-xl text-left transition-all duration-300
-        border overflow-hidden
-        ${isActive ? 'border-transparent' : 'border-white/10 hover:border-white/20'}
+        relative p-6 text-left transition-all duration-300 cursor-pointer border
+        ${isActive ? 'border-transparent bg-zinc-900 shadow-lg scale-[1.02]' : 'border-white/5 bg-zinc-900/50 hover:bg-zinc-900/80 hover:border-white/20'}
       `}
-      style={{
-        background: isActive 
-          ? `linear-gradient(135deg, rgba(${colorBase}, 0.15), rgba(${colorBase}, 0.05))` 
-          : 'rgba(255, 255, 255, 0.03)',
-        boxShadow: isActive 
-          ? `rgba(${colorBase}, 0.19) 0px 8px 32px, rgba(${colorBase}, 0.25) 0px 0px 0px 1px` 
-          : 'none',
-        transform: isActive ? 'scale(1.02)' : 'none'
-      }}
     >
-      <div 
-        className="absolute inset-0 rounded-xl pointer-events-none transition-all duration-500" 
-        style={{
-          border: `2px solid rgb(${colorBase})`, 
-          opacity: isActive ? 1 : 0, 
-          transform: isActive ? 'scale(1)' : 'scale(1.05)'
-        }} 
-      />
+      <div className={`absolute inset-0 rounded-xl pointer-events-none transition-all duration-500 border-2 opacity-0 scale-105 ${colorClass}`} 
+           style={{ opacity: isActive ? 1 : 0, transform: isActive ? 'scale(1)' : 'scale(1.05)' }} />
       
-      <div 
-        className="absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-500" 
-        style={{
-          background: `radial-gradient(circle at 50% 0%, rgba(${colorBase}, 0.2), transparent 70%)`, 
-          opacity: isActive ? 1 : 0
-        }} 
-      />
-
-      <div 
-        className={`absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center z-20 transition-all duration-300 ${isActive ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`} 
-        style={{
-          background: `linear-gradient(135deg, rgb(${colorBase}), rgba(${colorBase}, 0.8))`, 
-          boxShadow: `rgba(${colorBase}, 0.3) 0px 2px 10px`
-        }}
-      >
-        <Check className="w-3.5 h-3.5 text-black" strokeWidth={3} />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center text-center">
-        <div 
-          className="p-3 rounded-lg mb-3 transition-all duration-300" 
-          style={{
-            background: isActive ? `linear-gradient(135deg, rgba(${colorBase}, 0.25), rgba(${colorBase}, 0.1))` : 'rgba(255, 255, 255, 0.05)', 
-            transform: isActive ? 'scale(1.1)' : 'none',
-            color: isActive ? `rgb(${colorBase})` : 'rgb(156, 163, 175)'
-          }}
-        >
+      <div className="flex flex-col h-full gap-4 relative z-10">
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-white/5 transition-colors ${isActive ? colorClass.replace('border-', 'text-') : 'text-zinc-500'}`}>
           {icon}
         </div>
-        <h4 
-          className="font-bold text-lg mb-1 transition-colors duration-300" 
-          style={{ color: isActive ? '#fff' : '#d1d5db' }}
-        >
-          {title}
-        </h4>
-        <p 
-          className="text-xs transition-colors duration-300 leading-relaxed max-w-[200px]" 
-          style={{ color: isActive ? '#a1a1aa' : '#6b7280' }}
-        >
-          {description}
-        </p>
+        <div>
+          <h3 className={`text-lg font-bold mb-2 transition-colors ${isActive ? 'text-white' : 'text-zinc-300'}`}>{title}</h3>
+          <p className="text-sm text-zinc-400 leading-relaxed">{description}</p>
+        </div>
+        
+        <div className={`mt-auto w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isActive ? colorClass.replace('border-', 'bg-').replace('border-', 'border-') + ' text-black' : 'border-zinc-700 bg-transparent'}`}>
+          {isActive && <Check className="w-4 h-4" />}
+        </div>
       </div>
-    </button>
+    </Card>
   );
 }
 
-export default function OnboardingClient() {
+export default function OnboardingClient({ userId, email }: { userId: string, email: string }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
+  const [direction, setDirection] = useState(1);
+
+  // Step 1: Profile
   const [username, setUsername] = useState("");
-  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+
+  // Step 2: Persona
   const [persona, setPersona] = useState<Persona>(null);
+
+  // Step 3: Horizon
   const [horizon, setHorizon] = useState<Horizon>(null);
-  
+
+  // Submit states
   const [isSubmittingDiagnostic, setIsSubmittingDiagnostic] = useState(false);
   const [isSubmittingSkip, setIsSubmittingSkip] = useState(false);
 
-  // Debounced username check
   useEffect(() => {
-    if (username.length < 3) {
-      setIsUsernameAvailable(null);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
+    const checkUsername = async () => {
+      if (username.length < 3) {
+        setIsUsernameAvailable(null);
+        return;
+      }
       setIsCheckingUsername(true);
-      const available = await checkUsernameAvailability(username);
-      setIsUsernameAvailable(available);
+      const isAvailable = await checkUsernameAvailability(username);
+      setIsUsernameAvailable(isAvailable);
       setIsCheckingUsername(false);
-    }, 500);
+    };
 
+    const timer = setTimeout(checkUsername, 500);
     return () => clearTimeout(timer);
   }, [username]);
 
-  const handleComplete = async (runDiagnostic: boolean) => {
-    if (!persona || !horizon || !username || !isUsernameAvailable) return;
-    
-    if (runDiagnostic) {
-      setIsSubmittingDiagnostic(true);
-    } else {
-      setIsSubmittingSkip(true);
-    }
-    
-    try {
-      if (runDiagnostic) {
-        // First save the username before redirecting
-        await completeOnboarding(persona, horizon, username);
-        router.push(`/practice/diagnostic?source=onboarding&persona=${persona}&horizon=${horizon}`);
-      } else {
-        await completeOnboarding(persona, horizon, username);
-        router.refresh();
-        router.push("/");
-      }
-    } catch (err) {
-      console.error(err);
-      setIsSubmittingDiagnostic(false);
-      setIsSubmittingSkip(false);
-    }
-  };
-
-  const variants: Variants = {
-    initial: (direction: number) => ({
-      x: direction > 0 ? 50 : -50,
-      opacity: 0,
-      scale: 0.95
-    }),
-    animate: {
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      transition: { type: "spring", stiffness: 300, damping: 30 }
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? -50 : 50,
-      opacity: 0,
-      scale: 0.95,
-      transition: { type: "spring", stiffness: 300, damping: 30 }
-    })
-  };
-
-  const [direction, setDirection] = useState(1);
-  
   const changeStep = (newStep: Step) => {
     setDirection(newStep > step ? 1 : -1);
     setStep(newStep);
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
-      
-      {/* Header */}
-      <motion.div 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        className="text-center space-y-4 flex flex-col items-center w-full mb-12"
-      >
-        <Logo size="lg" className="mb-2" />
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">System Configuration</h1>
-        <p className="text-zinc-400 max-w-lg mx-auto">
-          Calibrate the NeuroQuant engine to your target objectives.
-        </p>
-      </motion.div>
+  const handleComplete = async (doDiagnostic: boolean) => {
+    if (!persona || !horizon || !username || !isUsernameAvailable) return;
+    
+    if (doDiagnostic) setIsSubmittingDiagnostic(true);
+    else setIsSubmittingSkip(true);
 
-      <div className="w-full max-w-2xl relative min-h-[400px] flex items-center justify-center">
+    const result = await completeOnboarding({
+      username,
+      persona,
+      horizon,
+      source: "organic" // Defaulting to organic
+    });
+
+    if (result.success) {
+      if (doDiagnostic) {
+        router.push(`/practice/diagnostic?persona=${persona}&horizon=${horizon}&source=organic`);
+      } else {
+        router.push("/");
+      }
+    } else {
+      if (doDiagnostic) setIsSubmittingDiagnostic(false);
+      else setIsSubmittingSkip(false);
+      alert(result.error || "Failed to complete setup");
+    }
+  };
+
+  const variants: Variants = {
+    initial: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? 40 : -40,
+    }),
+    animate: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }
+    },
+    exit: (direction: number) => ({
+      opacity: 0,
+      x: direction > 0 ? -40 : 40,
+      transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }
+    })
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center p-6 text-white overflow-hidden relative">
+      
+      {/* Dynamic Background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] mix-blend-screen" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] mix-blend-screen" />
+      </div>
+
+      <div className="w-full max-w-3xl flex justify-between items-center mb-16 relative z-10">
+        <Logo />
+        <div className="flex gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                i === step ? 'w-8 bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]' : i < step ? 'w-4 bg-primary/40' : 'w-4 bg-white/10'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full max-w-3xl flex-1 flex flex-col justify-center relative z-10">
         <AnimatePresence mode="wait" custom={direction}>
           
-          {/* STEP 1: USERNAME */}
+          {/* STEP 1: IDENTITY */}
           {step === 1 && (
             <motion.div
               key="step1"
@@ -207,41 +172,38 @@ export default function OnboardingClient() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full max-w-md mx-auto space-y-6"
+              className="w-full max-w-md mx-auto space-y-8"
             >
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-white mb-2">Claim your handle</h2>
-                <p className="text-zinc-400 text-sm">Your unique identifier on the global leaderboard.</p>
+                <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Claim your identity</h2>
+                <p className="text-zinc-400">Choose a unique handle for the leaderboards.</p>
               </div>
 
-              <div className="relative">
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                  placeholder="e.g. operator_99"
-                  className={`
-                    w-full bg-zinc-900/50 border-2 rounded-xl px-6 py-4 text-white text-lg font-medium outline-none transition-all duration-300
-                    focus:bg-zinc-900
-                    ${username.length > 0 && username.length < 3 ? 'border-red-500/50 focus:border-red-500' : ''}
-                    ${isUsernameAvailable === true ? 'border-[#00FF9D]/50 focus:border-[#00FF9D] shadow-[0_0_20px_rgba(0,255,157,0.15)]' : ''}
-                    ${isUsernameAvailable === false ? 'border-red-500/50 focus:border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]' : ''}
-                    ${isUsernameAvailable === null && username.length >= 3 ? 'border-zinc-700 focus:border-white/20' : 'border-zinc-800'}
-                  `}
-                />
-                
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  {isCheckingUsername && <Loader2 className="w-5 h-5 text-zinc-500 animate-spin" />}
-                  {isUsernameAvailable === true && !isCheckingUsername && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-[#00FF9D] flex items-center text-sm font-bold gap-1">
-                      <Check className="w-5 h-5" /> Available
-                    </motion.div>
-                  )}
-                  {isUsernameAvailable === false && !isCheckingUsername && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-red-500 text-sm font-bold">
-                      Taken
-                    </motion.div>
-                  )}
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    label="Username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="e.g. quant_master"
+                    maxLength={20}
+                  />
+                  <div className="absolute right-4 top-[38px] flex items-center">
+                    {isCheckingUsername && (
+                      <Loader2 className="w-5 h-5 animate-spin text-zinc-500" />
+                    )}
+                    {isUsernameAvailable === true && !isCheckingUsername && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-primary text-sm font-bold flex items-center gap-1">
+                        <Check className="w-4 h-4" /> Available
+                      </motion.div>
+                    )}
+                    {isUsernameAvailable === false && !isCheckingUsername && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-red-500 text-sm font-bold">
+                        Taken
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -256,25 +218,28 @@ export default function OnboardingClient() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full space-y-8"
+              className="w-full space-y-10"
             >
-              <h2 className="text-xl font-semibold text-center text-white">Select your persona</h2>
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Select your persona</h2>
+                <p className="text-zinc-400">This calibrates your baseline difficulty.</p>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                 <SelectionCard
                   title="The Quant"
                   description="20x20 multiplication. Sub-second targets. Built for trading floors."
-                  icon={<Zap className="w-7 h-7" />}
+                  icon={<Zap className="w-8 h-8" />}
                   isActive={persona === "quant"}
                   onClick={() => setPersona("quant")}
-                  colorBase="0, 255, 157" // #00FF9D
+                  colorClass="border-primary text-primary bg-primary"
                 />
                 <SelectionCard
                   title="The Generalist"
                   description="12x12 multiplication. Standard timers. Solid arithmetic foundation."
-                  icon={<Target className="w-7 h-7" />}
+                  icon={<Target className="w-8 h-8" />}
                   isActive={persona === "generalist"}
                   onClick={() => setPersona("generalist")}
-                  colorBase="255, 149, 0" // #FF9500
+                  colorClass="border-blue-500 text-blue-500 bg-blue-500"
                 />
               </div>
             </motion.div>
@@ -289,18 +254,21 @@ export default function OnboardingClient() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full space-y-8"
+              className="w-full space-y-10"
             >
-              <h2 className="text-xl font-semibold text-center text-white">Select target horizon</h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Select target horizon</h2>
+                <p className="text-zinc-400">How intense should your daily practice be?</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full">
                 <SelectionCard
                   title="14 Days"
                   description="150 new cards/day. Extreme intensity."
                   icon={<Zap className="w-6 h-6" />}
                   isActive={horizon === "14_days"}
                   onClick={() => setHorizon("14_days")}
-                  colorBase="239, 68, 68" // Red
+                  colorClass="border-red-500 text-red-500 bg-red-500"
                 />
                 <SelectionCard
                   title="30 Days"
@@ -308,7 +276,7 @@ export default function OnboardingClient() {
                   icon={<Target className="w-6 h-6" />}
                   isActive={horizon === "30_days"}
                   onClick={() => setHorizon("30_days")}
-                  colorBase="59, 130, 246" // Blue
+                  colorClass="border-blue-500 text-blue-500 bg-blue-500"
                 />
                 <SelectionCard
                   title="3 Months"
@@ -316,7 +284,7 @@ export default function OnboardingClient() {
                   icon={<Target className="w-6 h-6" />}
                   isActive={horizon === "3_months"}
                   onClick={() => setHorizon("3_months")}
-                  colorBase="168, 85, 247" // Purple
+                  colorClass="border-purple-500 text-purple-500 bg-purple-500"
                 />
               </div>
             </motion.div>
@@ -334,105 +302,98 @@ export default function OnboardingClient() {
               className="w-full max-w-md mx-auto text-center space-y-8"
             >
               <div>
-                <h2 className="text-2xl font-bold text-white mb-3">Baseline Diagnostic</h2>
+                <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Baseline Diagnostic</h2>
                 <p className="text-zinc-400 leading-relaxed">
                   Take a 60 second diagnostic to calibrate starting difficulty, or skip and start fresh.
                 </p>
               </div>
 
               <div className="space-y-4 pt-4">
-                <button
+                <Button
                   onClick={() => handleComplete(true)}
                   disabled={isSubmittingDiagnostic || isSubmittingSkip}
-                  className="w-full py-4 btn-glow-green font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none"
+                  className="w-full py-6 text-lg"
+                  variant="primary"
                 >
-                  {isSubmittingDiagnostic ? <Loader2 className="w-5 h-5 animate-spin text-black" /> : <span className="text-black">Run 60s Diagnostic</span>}
-                </button>
-                
-                <button
+                  {isSubmittingDiagnostic ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Run 60s Diagnostic</span>}
+                </Button>
+
+                <Button
                   onClick={() => handleComplete(false)}
                   disabled={isSubmittingDiagnostic || isSubmittingSkip}
-                  className="w-full py-4 bg-zinc-900 text-zinc-300 font-semibold rounded-xl border border-zinc-800 hover:bg-zinc-800 hover:text-white transition-all cursor-pointer hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+                  className="w-full py-6 text-lg"
+                  variant="outline"
                 >
                   {isSubmittingSkip ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Skip and start fresh</span>}
-                </button>
+                </Button>
               </div>
             </motion.div>
           )}
-          
+
         </AnimatePresence>
       </div>
 
       {/* Navigation Buttons Area */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="w-full flex justify-center items-center gap-6 mt-12 h-[60px]"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="w-full max-w-3xl flex justify-between items-center mt-12 h-[60px] relative z-10 border-t border-white/5 pt-8"
       >
-        {step > 1 && step < 4 && (
-          <button
-            onClick={() => changeStep((step - 1) as Step)}
-            className="px-6 py-4 text-zinc-500 hover:text-white transition-colors font-medium cursor-pointer"
-          >
-            Back
-          </button>
-        )}
+        <div>
+          {step > 1 && step < 4 && (
+            <button
+              onClick={() => changeStep((step - 1) as Step)}
+              className="px-6 py-3 text-zinc-400 hover:text-white transition-colors font-medium cursor-pointer"
+            >
+              Back
+            </button>
+          )}
+          {step === 4 && (
+            <button
+              onClick={() => changeStep(3)}
+              disabled={isSubmittingDiagnostic || isSubmittingSkip}
+              className="px-6 py-3 text-zinc-400 hover:text-white transition-colors font-medium cursor-pointer disabled:opacity-50"
+            >
+              Back
+            </button>
+          )}
+        </div>
 
-        {step === 1 && (
-          <button
-            disabled={!isUsernameAvailable}
-            onClick={() => changeStep(2)}
-            className={`
-              flex items-center gap-2 px-8 py-4 font-bold rounded-xl transition-all
-              ${isUsernameAvailable 
-                ? 'bg-[#00FF9D] hover:bg-[#00e68d] text-black shadow-[0_0_20px_rgba(0,255,157,0.3)] hover:scale-105 active:scale-95 cursor-pointer' 
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'}
-            `}
-          >
-            Continue <ArrowRight className="w-4 h-4" />
-          </button>
-        )}
+        <div>
+          {step === 1 && (
+            <Button
+              disabled={!isUsernameAvailable}
+              onClick={() => changeStep(2)}
+              variant={isUsernameAvailable ? "primary" : "secondary"}
+              className="px-8"
+            >
+              Continue <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
 
-        {step === 2 && (
-          <button
-            disabled={!persona}
-            onClick={() => changeStep(3)}
-            className={`
-              flex items-center gap-2 px-8 py-4 font-bold rounded-xl transition-all
-              ${persona 
-                ? 'bg-white hover:bg-zinc-200 text-black hover:scale-105 active:scale-95 cursor-pointer' 
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'}
-            `}
-          >
-            Continue <ArrowRight className="w-4 h-4" />
-          </button>
-        )}
+          {step === 2 && (
+            <Button
+              disabled={!persona}
+              onClick={() => changeStep(3)}
+              variant={persona ? "primary" : "secondary"}
+              className="px-8"
+            >
+              Continue <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
 
-        {step === 3 && (
-          <button
-            disabled={!horizon}
-            onClick={() => changeStep(4)}
-            className={`
-              flex items-center gap-2 px-8 py-4 font-bold rounded-xl transition-all
-              ${horizon 
-                ? 'bg-white hover:bg-zinc-200 text-black hover:scale-105 active:scale-95 cursor-pointer' 
-                : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'}
-            `}
-          >
-            Complete Setup <ArrowRight className="w-4 h-4" />
-          </button>
-        )}
-
-        {step === 4 && (
-          <button
-            onClick={() => changeStep(3)}
-            disabled={isSubmittingDiagnostic || isSubmittingSkip}
-            className="px-6 py-2 text-zinc-500 hover:text-white transition-colors text-sm font-medium cursor-pointer disabled:opacity-50"
-          >
-            Back
-          </button>
-        )}
+          {step === 3 && (
+            <Button
+              disabled={!horizon}
+              onClick={() => changeStep(4)}
+              variant={horizon ? "primary" : "secondary"}
+              className="px-8"
+            >
+              Complete Setup <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
+        </div>
       </motion.div>
     </div>
   );
