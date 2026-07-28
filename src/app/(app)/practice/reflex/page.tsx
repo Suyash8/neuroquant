@@ -1,11 +1,15 @@
+import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Brain, Zap, Target, Calculator, Play, ChevronRight, Info, Trophy } from "lucide-react";
+import { ChevronRight, Calculator, Target, Zap, Play, Trophy, Info, Activity, Clock } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { withPerf } from "@/lib/perf";
 import { Suspense } from "react";
 import ReflexLoading from "./loading";
+import { Card, CardContent } from "@/components/ui/Card";
+import { GameCard } from "@/components/ui/GameCard";
+import { StatCard } from "@/components/ui/StatCard";
 
 export default function ReflexPage() {
   return (
@@ -41,7 +45,7 @@ async function ReflexData() {
 
   if (profile) {
       pendingCount = profile._count.progress;
-      const dailyQuota = profile.horizon === "14_days" ? 150 : 50; 
+      const dailyQuota = profile.horizon === "14_days" ? 150 : 50;
       dailyProgress = Math.max(0, Math.min(100, Math.round(((dailyQuota - pendingCount) / dailyQuota) * 100)));
       if (pendingCount === 0) dailyProgress = 100;
   } else {
@@ -50,7 +54,7 @@ async function ReflexData() {
 
   // Mock stats for the UI
   const mockStats = [
-    { label: "SPD", value: 85, color: "bg-green-500" },
+    { label: "SPD", value: 85, color: "bg-primary" },
     { label: "ACC", value: 73, color: "bg-orange-500" },
     { label: "STR", value: 20, color: "bg-blue-500" },
     { label: "CNT", value: 95, color: "bg-purple-500" }
@@ -60,122 +64,102 @@ async function ReflexData() {
     <div className="p-8 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
       <header>
         <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Games</h1>
-        <p className="text-zinc-400">Train timed reasoning, mental math, and market intuition.</p>
+        <p className="text-zinc-400 text-lg">Train timed reasoning, mental math, and market intuition.</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Score Card */}
-        <div className="flex flex-col justify-center">
-          <div className="flex items-center gap-2 text-sm text-zinc-400 mb-4">
-            <span>Your Reflex Score</span>
-            <Info className="w-4 h-4" />
-            <Trophy className="w-4 h-4" />
-          </div>
-          <div className="flex items-end gap-4 mb-10">
-            <span className="text-7xl font-bold text-[#0ea5e9] leading-none tracking-tighter">{dailyProgress}</span>
-            <div className="bg-[#0ea5e9]/20 text-[#0ea5e9] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-              {dailyProgress === 100 ? "Complete" : "Developing"}
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-4 gap-4 w-full max-w-md">
-            {mockStats.map((stat, i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <div className="text-[10px] text-zinc-500 font-bold uppercase text-center">{stat.label}</div>
-                <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                  <div className={`h-full ${stat.color}`} style={{ width: `${stat.value}%` }} />
-                </div>
-                <div className="text-xs text-white font-semibold text-center">{stat.value}</div>
+        {/* Main Score Card */}
+        <Card className="lg:col-span-2 relative overflow-hidden bg-zinc-950/80 border-primary/20 shadow-[0_0_50px_rgba(var(--primary-rgb),0.05)]">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+          <CardContent className="p-8 flex flex-col justify-between h-full relative z-10">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-bold text-zinc-400 uppercase tracking-widest mb-4">
+                <Trophy className="w-5 h-5 text-primary" />
+                <span>Your Reflex Score</span>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="flex items-end gap-6 mb-12">
+                <span className="text-8xl font-bold text-white leading-none tracking-tighter drop-shadow-md">
+                  {dailyProgress}
+                </span>
+                <div className="bg-primary/10 border border-primary/20 text-primary text-sm font-bold px-4 py-2 rounded-lg uppercase tracking-wider mb-2">
+                  {dailyProgress === 100 ? "Goal Met" : "In Progress"}
+                </div>
+              </div>
+            </div>
 
-        {/* Profile Completion / Mini card */}
-        <div className="mynt-card p-6 flex flex-col justify-center">
-          <div className="flex items-center gap-3 mb-4">
-             <div className="w-8 h-8 rounded-full bg-[#0ea5e9]/20 flex items-center justify-center">
-               <Target className="w-4 h-4 text-[#0ea5e9]" />
-             </div>
-             <h3 className="text-white font-semibold">Complete Your Daily Quota</h3>
-          </div>
-          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-            Clear your spaced repetition queue to maximize neural retention. <strong className="text-white">{pendingCount} cards remaining.</strong>
-          </p>
-          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden mb-6">
-             <div className="h-full bg-[#0ea5e9]" style={{ width: `${dailyProgress}%` }} />
-          </div>
-          <button className="w-full py-3 px-4 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-colors">
-            Continue Practicing <ChevronRight className="w-4 h-4" />
-          </button>
+            <div className="grid grid-cols-4 gap-6 w-full max-w-lg mt-auto">
+              {mockStats.map((stat, i) => (
+                <div key={i} className="flex flex-col gap-3">
+                  <div className="text-xs text-zinc-500 font-bold uppercase">{stat.label}</div>
+                  <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={`h-full ${stat.color} shadow-[0_0_10px_currentColor]`} style={{ width: `${stat.value}%` }} />
+                  </div>
+                  <div className="text-sm text-white font-bold">{stat.value}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mini stats cards */}
+        <div className="flex flex-col gap-6">
+          <StatCard
+            title="Avg Speed"
+            value="1.2s"
+            icon={Clock}
+            iconColor="text-blue-500"
+            trend={{ value: 12, isPositive: true }}
+          />
+          
+          <Card className="flex-1 bg-zinc-900/50 hover:bg-zinc-900/80 transition-colors flex flex-col justify-center border-white/5 p-6 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Target className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-right">
+                <div className="text-xs font-bold text-zinc-500 uppercase">Quota</div>
+                <div className="text-sm font-bold text-white">{pendingCount} Left</div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-zinc-400 mb-6">
+              Clear your spaced repetition queue to maximize neural retention.
+            </p>
+            
+            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden mb-4">
+               <div className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" style={{ width: `${dailyProgress}%` }} />
+            </div>
+          </Card>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Standard Session (Speed Engine style) */}
-        <div className="mynt-card relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-green-500 opacity-80" />
-          <div className="p-8 flex flex-col h-full">
-             <div className="flex justify-between items-start mb-16">
-               <div className="w-16 h-16 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-500 relative z-10 group-hover:scale-110 transition-transform duration-500">
-                 <Calculator className="w-8 h-8" />
-               </div>
-               <div className="bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full uppercase flex items-center gap-1 border border-green-500/30">
-                 <Zap className="w-3 h-3" /> Core
-               </div>
-             </div>
-             
-             <div className="mb-8">
-               <h3 className="text-2xl font-bold text-white mb-2">Daily Review</h3>
-               <p className="text-zinc-400">Mental math. Under fire.</p>
-             </div>
-             
-             <div className="flex items-center gap-4 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-6">
-               <span className="flex items-center gap-1"><Play className="w-3 h-3" /> {pendingCount} cards</span>
-               <span>★ Beginner</span>
-             </div>
+        <GameCard
+          title="Daily Review"
+          description="Mental math. Under fire. Execute your scheduled spaced repetition cards."
+          href="/practice/reflex/session"
+          icon={Calculator}
+          colorTheme="primary"
+          badgeText="Core Engine"
+          difficulty="Beginner"
+          metrics={[
+            { label: "Cards", value: pendingCount }
+          ]}
+        />
 
-             <Link href="/practice/reflex/session" className="mt-auto block">
-               <button className="w-full py-4 rounded-xl btn-glow-green flex items-center justify-center gap-2 text-lg">
-                 <Play className="w-5 h-5 fill-black" /> Play Again <ChevronRight className="w-5 h-5" />
-               </button>
-             </Link>
-          </div>
-        </div>
-
-        {/* Sudden Death (Risk Lab style) */}
-        <div className="mynt-card relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-orange-500 opacity-80" />
-          <div className="p-8 flex flex-col h-full">
-             <div className="flex justify-between items-start mb-16">
-               <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 relative z-10 group-hover:scale-110 transition-transform duration-500">
-                 <Target className="w-8 h-8" />
-               </div>
-               <div className="bg-orange-500/20 text-orange-400 text-xs font-bold px-3 py-1 rounded-full uppercase flex items-center gap-1 border border-orange-500/30">
-                 <Zap className="w-3 h-3" /> Sudden Death
-               </div>
-             </div>
-             
-             <div className="mb-8">
-               <h3 className="text-2xl font-bold text-white mb-2">Stress Test</h3>
-               <p className="text-zinc-400">Bet sizing the Kelly way.</p>
-             </div>
-             
-             <div className="flex items-center gap-4 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-6">
-               <span className="flex items-center gap-1"><Play className="w-3 h-3" /> Infinite</span>
-               <span>★ Expert</span>
-             </div>
-
-             <Link href="/practice/reflex/sudden-death" className="mt-auto block">
-               <button className="w-full py-4 rounded-xl btn-glow-orange flex items-center justify-center gap-2 text-lg">
-                 <Play className="w-5 h-5 fill-black" /> Play Again <ChevronRight className="w-5 h-5" />
-               </button>
-             </Link>
-          </div>
-        </div>
-
+        <GameCard
+          title="Sudden Death"
+          description="Bet sizing the Kelly way. Make one mistake and the run is over. Test your limits."
+          href="/practice/reflex/sudden-death"
+          icon={Zap}
+          colorTheme="orange"
+          badgeText="Stress Test"
+          difficulty="Expert"
+          metrics={[
+            { label: "Mode", value: "Infinite" }
+          ]}
+        />
       </div>
     </div>
   );

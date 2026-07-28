@@ -32,7 +32,7 @@ export function GoalTracker({
               <CheckCircle2 className="w-6 h-6 text-primary" />
             ) : (
               <div className="relative w-6 h-6 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
                   <path
                     className="text-zinc-800"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
