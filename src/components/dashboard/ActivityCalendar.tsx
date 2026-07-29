@@ -62,7 +62,7 @@ export function ActivityCalendar({
           <div>
             <div className="text-xs text-zinc-400 uppercase tracking-wider font-bold mb-1">Current Streak</div>
             <div className="text-2xl font-bold text-white flex items-center gap-2">
-              <Flame className="w-5 h-5 text-orange-500 fill-orange-500/20" /> {globalStreak} days
+              <Flame className="w-5 h-5 text-orange-500 fill-orange-500/20" /> {globalStreak} day{globalStreak === 1 ? '' : 's'}
             </div>
           </div>
           <div className="text-right">

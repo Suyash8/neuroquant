@@ -30,6 +30,7 @@ export function DashboardGraph({ data }: { data: { date: string, velocity: numbe
           tickMargin={10}
           tickFormatter={(val) => {
             const date = new Date(val);
+            if (isNaN(date.getTime())) return val;
             return `${date.getMonth() + 1}/${date.getDate()}`;
           }}
         />
@@ -53,11 +54,15 @@ export function DashboardGraph({ data }: { data: { date: string, velocity: numbe
           itemStyle={{ color: '#60a5fa', fontWeight: 'bold' }}
           labelStyle={{ color: '#a1a1aa', marginBottom: '8px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
           formatter={(value: any) => [`${(Number(value) / 1000).toFixed(2)}s`, 'Avg Velocity']}
-          labelFormatter={(label) => new Date(label).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+          labelFormatter={(label) => {
+            const d = new Date(label);
+            if (isNaN(d.getTime())) return label;
+            return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+          }}
         />
         <Area 
           type="monotone" 
-          dataKey="velocity" 
+          dataKey="avgVelocity" 
           stroke="#3b82f6" 
           strokeWidth={3}
           fillOpacity={1} 

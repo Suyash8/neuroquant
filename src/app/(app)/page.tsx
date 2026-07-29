@@ -13,6 +13,7 @@ import { GoalTracker } from "@/components/dashboard/GoalTracker";
 import { GameCard } from "@/components/ui/GameCard";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { StatCard } from "@/components/ui/StatCard";
 
 export default function DashboardPage() {
   return (
@@ -89,7 +90,7 @@ async function DashboardData() {
   });
 
   const graphData = Array.from(groupedLogs.entries()).map(([date, data]) => ({
-    date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+    date: date,
     avgVelocity: data.count > 0 ? Math.round(data.totalMs / data.count) : 0
   }));
 
@@ -128,18 +129,13 @@ async function DashboardData() {
            </CardContent>
         </Card>
 
-        <Card className="p-6 flex flex-col justify-center">
-          <div className="flex items-center gap-3 mb-2">
-            <Zap className="w-5 h-5 text-blue-400" />
-            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Average Velocity</h3>
-          </div>
-          <div className="text-3xl font-bold text-white">
-            {Math.round(dbUser.averageVelocityMs)} <span className="text-lg text-zinc-500 font-medium">ms</span>
-          </div>
-          <div className="text-xs text-primary font-medium mt-2">
-            Top 15% of users
-          </div>
-        </Card>
+        <StatCard
+          title="Average Velocity"
+          value={<>{Math.round(dbUser.averageVelocityMs)} <span className="text-lg text-zinc-500 font-medium">ms</span></>}
+          icon={Zap}
+          iconColor="text-blue-500"
+          className="col-span-1"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -166,7 +162,7 @@ async function DashboardData() {
               View all <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-[200px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <GameCard 
                 title="Reflex Engine"
                 description="Mental math and speed drills to sharpen arithmetic speed."

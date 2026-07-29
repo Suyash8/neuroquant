@@ -231,33 +231,40 @@ export default function DiagnosticClient({
             </div>
 
             {/* Main Card Area */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full relative z-10">
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="none"
-                value={inputVal}
-                onChange={() => {}}
-                onKeyDown={handleKeyDown}
-                className="absolute opacity-0 pointer-events-none"
-                autoFocus
-              />
+            <div className="flex-1 flex flex-col items-center justify-center w-full relative z-10 px-4">
+              <Card 
+                className="w-full max-w-md bg-zinc-950/90 shadow-[0_0_50px_rgba(var(--primary-rgb),0.05)] border-primary/10 relative overflow-hidden flex flex-col items-center justify-center min-h-[350px] cursor-text"
+                onClick={() => inputRef.current?.focus()}
+              >
+                <CardContent className="p-8 w-full flex flex-col items-center justify-center">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    inputMode="none"
+                    value={inputVal}
+                    onChange={() => {}}
+                    onKeyDown={handleKeyDown}
+                    className="absolute opacity-0"
+                    autoFocus
+                  />
+                  
+                  <div className={`w-full flex flex-col items-center justify-center transition-transform ${isError ? 'animate-shake' : ''}`}>
+                    <div className="text-[80px] sm:text-[100px] font-bold text-white tracking-tighter leading-none mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                      {currentCard.question}
+                    </div>
 
-              <div className={`w-full flex flex-col items-center justify-center transition-transform ${isError ? 'animate-shake' : ''}`}>
-                <div className="text-[100px] sm:text-[120px] font-bold text-white tracking-tighter leading-none mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                  {currentCard.question}
-                </div>
-
-                <div className="h-24 w-full flex items-center justify-center">
-                  <span className={`text-[80px] font-mono font-bold leading-none transition-colors ${
-                    isSuccess ? 'text-primary drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]'
-                      : isError ? 'text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]'
-                        : 'text-zinc-400'
-                  }`}>
-                    {inputVal || "_"}
-                  </span>
-                </div>
-              </div>
+                    <div className="h-20 w-full flex items-center justify-center">
+                      <span className={`text-[60px] sm:text-[80px] font-mono font-bold leading-none transition-colors ${
+                        isSuccess ? 'text-primary drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]'
+                          : isError ? 'text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]'
+                            : 'text-zinc-400'
+                      }`}>
+                        {inputVal || "_"}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Custom Numpad (Mobile Only) */}
