@@ -20,14 +20,12 @@ export default async function DiagnosticPage(props: {
   const source = searchParams.source || null;
 
   return (
-    <div className="w-full flex-1 min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-6 text-foreground">
-      <div className="w-full max-w-2xl flex flex-col items-center justify-center">
-        <DiagnosticClient 
-          persona={persona} 
-          horizon={horizon} 
-          source={source}
-        />
-      </div>
+    <div className="w-full min-h-screen bg-[#09090b] flex flex-col text-foreground">
+      <DiagnosticClient 
+        persona={persona} 
+        horizon={horizon} 
+        source={source}
+      />
     </div>
   );
 }
