@@ -171,16 +171,29 @@ export default function DiagnosticClient({
     const avgVelocity = score > 0 ? totalVelocityMs / score : 0;
     const accuracy = attempts > 0 ? (score / attempts) * 100 : 0;
     
-    await saveDiagnosticResult({
-      score,
-      accuracy,
-      averageVelocityMs: avgVelocity,
-      maxDifficultyReached,
-      persona: persona || 'generalist',
-      horizon: horizon || 'none',
-      source: source || 'none'
-    });
-    setIsSaving(false);
+    try {
+      const res = await saveDiagnosticResult({
+        persona: persona || 'generalist',
+        horizon: horizon || 'none',
+        source: source || 'none',
+        metrics: {
+          score,
+          accuracy,
+          averageVelocityMs: avgVelocity,
+          maxDifficultyReached,
+        }
+      });
+
+      if (res && res.success) {
+        router.push("/");
+      } else {
+        alert(res?.error || "Failed to save data");
+        setIsSaving(false);
+      }
+    } catch (e) {
+      alert("An unexpected error occurred. Please try again.");
+      setIsSaving(false);
+    }
   };
 
   // Derived metrics for game over screen
