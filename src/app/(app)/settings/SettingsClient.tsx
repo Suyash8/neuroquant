@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { updateSettings } from "@/actions/updateSettings";
-import { Settings, Volume2, Smartphone, AlertTriangle, Loader2, CheckCircle2, Zap } from "lucide-react";
+import { wipeProgression } from "@/actions/wipeProgression";
+import { Settings, Volume2, Smartphone, AlertTriangle, Loader2, CheckCircle2, Zap, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageContainer, PageHeader } from "@/components/layout/PageContainer";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Toggle } from "@/components/ui/Toggle";
@@ -21,6 +23,22 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
     soundEnabled: initialSettings.soundEnabled,
     hapticEnabled: initialSettings.hapticEnabled,
   });
+
+  const [showWipeModal, setShowWipeModal] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
+
+  const handleWipe = async () => {
+    setIsWiping(true);
+    try {
+      await wipeProgression();
+      setShowWipeModal(false);
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsWiping(false);
+    }
+  };
 
   const handleChange = (key: string, value: any) => {
     const newForm = { ...form, [key]: value };
@@ -196,13 +214,72 @@ export default function SettingsClient({ initialSettings }: { initialSettings: a
               <div className="font-bold text-white tracking-wide">Wipe Progression Data</div>
               <div className="text-sm font-medium text-zinc-400 mt-1">Permanently delete all neural mappings, streaks, and history.</div>
             </div>
-            <Button variant="danger">
+            <Button variant="danger" onClick={() => setShowWipeModal(true)}>
               Reset Progress
             </Button>
           </div>
         </GlassPanel>
 
       </div>
+
+      {/* Wipe Confirmation Modal */}
+      <AnimatePresence>
+        {showWipeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-[#09090b] border border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.15)] rounded-2xl p-6 w-full max-w-md relative overflow-hidden"
+            >
+              {/* Background Glow */}
+              <div className="absolute top-0 inset-x-0 h-1 bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.8)]" />
+              
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-white">Nuclear Option</h3>
+                    <p className="text-red-400 font-medium text-sm">This cannot be undone.</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowWipeModal(false)} className="text-zinc-500 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-zinc-400 text-sm mb-8 space-y-3">
+                <p>Are you absolutely sure you want to wipe all progression data?</p>
+                <ul className="list-disc pl-5 space-y-1 text-zinc-300">
+                  <li>All neural mappings and flashcards deleted</li>
+                  <li>Velocity and accuracy history destroyed</li>
+                  <li>Streaks and experience reset to zero</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white border border-white/5" 
+                  onClick={() => setShowWipeModal(false)}
+                  disabled={isWiping}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="danger" 
+                  className="flex-1" 
+                  onClick={handleWipe}
+                  disabled={isWiping}
+                >
+                  {isWiping ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Confirm Wipe"}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </PageContainer>
   );
 }
