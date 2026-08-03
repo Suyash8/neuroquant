@@ -322,7 +322,7 @@ export default function OnboardingClient({ userId, email }: { userId: string, em
                   onClick={() => handleComplete(false)}
                   disabled={isSubmittingDiagnostic || isSubmittingSkip}
                   className="w-full py-6 text-lg"
-                  variant="outline"
+                  variant="secondary"
                 >
                   {isSubmittingSkip ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Skip and start fresh</span>}
                 </Button>

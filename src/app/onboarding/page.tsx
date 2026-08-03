@@ -22,7 +22,7 @@ export default async function OnboardingPage() {
   return (
     <div className="w-full flex-1 min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-6 text-foreground">
       <div className="w-full max-w-4xl flex items-center justify-center">
-        <OnboardingClient />
+        <OnboardingClient userId={user.id} email={user.email!} />
       </div>
     </div>
   );

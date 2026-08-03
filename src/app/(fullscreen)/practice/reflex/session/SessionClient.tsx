@@ -155,7 +155,7 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
       />
 
       {/* Top Bar / Progress */}
-      <ProgressBar progress={progressPct} className="rounded-none absolute top-0 inset-x-0 h-1 bg-white/5" indicatorClassName="bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
+      <ProgressBar progress={progressPct} className="rounded-none absolute top-0 inset-x-0 h-1 bg-white/5" />
 
       <div className="absolute top-6 inset-x-6 flex justify-between items-center z-10">
         <button

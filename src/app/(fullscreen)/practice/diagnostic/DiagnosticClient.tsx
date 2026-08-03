@@ -68,10 +68,10 @@ export default function DiagnosticClient({
 
   // Next Card Generation
   const generateNextCard = useCallback(() => {
-    const nextQ = generateMathQuestion(difficulty as OperationLevel);
+    const nextQ = generateMathQuestion(difficulty as OperationLevel, true);
     setCurrentCard({
       id: Math.random().toString(),
-      cardId: nextQ.id,
+      cardId: nextQ.question,
       question: nextQ.question,
       answer: nextQ.answer,
       difficulty: difficulty
@@ -184,10 +184,10 @@ export default function DiagnosticClient({
         }
       });
 
-      if (res && res.success) {
+      if (res && 'success' in res && res.success) {
         router.push("/");
       } else {
-        alert(res?.error || "Failed to save data");
+        alert((res && 'error' in res ? (res as any).error : undefined) || "Failed to save data");
         setIsSaving(false);
       }
     } catch (e) {
@@ -224,7 +224,7 @@ export default function DiagnosticClient({
             className="w-full flex-1 flex flex-col"
           >
             {/* Top Bar / Progress */}
-            <ProgressBar progress={progressPct} className="rounded-none absolute top-0 inset-x-0 h-1 bg-white/5" indicatorClassName="bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
+            <ProgressBar progress={progressPct} className="rounded-none absolute top-0 inset-x-0 h-1 bg-white/5" />
 
             <div className="w-full max-w-sm mx-auto flex items-center justify-between mt-8 relative z-10">
               <div className="px-4 py-2 bg-white/5 rounded-full border border-white/5 flex items-center gap-2 backdrop-blur-md">

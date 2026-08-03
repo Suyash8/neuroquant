@@ -7,7 +7,7 @@ import { DashboardGraph } from "./DashboardGraph";
 import { withPerf } from "@/lib/perf";
 import { Suspense } from "react";
 import DashboardLoading from "./loading";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { PageContainer, PageHeader } from "@/components/layout/PageContainer";
 import { ActivityCalendar } from "@/components/dashboard/ActivityCalendar";
 import { GoalTracker } from "@/components/dashboard/GoalTracker";
 import { GameCard } from "@/components/ui/GameCard";
@@ -91,7 +91,7 @@ async function DashboardData() {
 
   const graphData = Array.from(groupedLogs.entries()).map(([date, data]) => ({
     date: date,
-    avgVelocity: data.count > 0 ? Math.round(data.totalMs / data.count) : 0
+    velocity: data.count > 0 ? Math.round(data.totalMs / data.count) : 0
   }));
 
   const level = Math.floor(Math.sqrt(dbUser.totalPoints / 100)) + 1;
@@ -100,10 +100,11 @@ async function DashboardData() {
   const levelProgress = ((dbUser.totalPoints - prevLevelPoints) / (nextLevelPoints - prevLevelPoints)) * 100;
 
   return (
-    <PageContainer
-      title={`Welcome back, ${dbUser.displayName}`}
-      subtitle="Here's a breakdown of your cognitive performance."
-    >
+    <PageContainer>
+      <PageHeader 
+        title={`Welcome back, ${dbUser.displayName}`}
+        description="Here's a breakdown of your cognitive performance."
+      />
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card className="col-span-1 lg:col-span-2 relative overflow-hidden group">
