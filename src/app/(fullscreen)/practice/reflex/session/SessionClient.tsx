@@ -7,7 +7,7 @@ import { useReflexSessionStore, ReflexQuestion } from "@/store/reflex";
 import { X } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
-export default function SpeedEngineSession({ userId, initialQuestions }: { userId: string, initialQuestions: ReflexQuestion[] }) {
+export default function SpeedEngineSession({ userId, initialQuestions, isCustom = false }: { userId: string, initialQuestions: ReflexQuestion[], isCustom?: boolean }) {
   const router = useRouter();
   const {
     isActive, queue, currentIndex, currentInput, startTime,
@@ -25,16 +25,16 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
   // Initialize session on mount
   useEffect(() => {
     if (initialQuestions.length > 0) {
-      startSession(userId, initialQuestions);
+      startSession(userId, initialQuestions, isCustom);
     }
     return () => { endSession(); };
-  }, [startSession, endSession, userId, initialQuestions]);
+  }, [startSession, endSession, userId, initialQuestions, isCustom]);
 
   // Fallback: sync data on tab close via sendBeacon
   useEffect(() => {
     const handleBeforeUnload = () => {
       const state = useReflexSessionStore.getState();
-      if (state.userId && state.logs.length > 0) {
+      if (state.userId && state.logs.length > 0 && !state.isCustom) {
         const payload = JSON.stringify({
           userId: state.userId,
           logs: state.logs,
@@ -89,7 +89,7 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
         if (!state.isActive) {
           // Session is finished, sync and redirect
           await state.endSession();
-          router.push("/practice/reflex");
+          router.push("/practice/reflex/summary");
         }
       }, 120);
 
@@ -161,7 +161,7 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
         <button
           onClick={async () => {
             const state = useReflexSessionStore.getState();
-            if (state.userId && state.logs.length > 0) {
+            if (state.userId && state.logs.length > 0 && !state.isCustom) {
               const payload = {
                 userId: state.userId,
                 logs: state.logs,
@@ -198,17 +198,19 @@ export default function SpeedEngineSession({ userId, initialQuestions }: { userI
             className="text-center"
           >
             {/* The Question */}
-            <h1 className="text-7xl md:text-[9rem] font-mono font-bold tracking-tighter text-white mb-8">
+            <h1 className={`text-[5rem] md:text-[10rem] lg:text-[12rem] font-mono font-black tracking-tighter transition-all duration-200 ${feedback === "correct" ? "text-primary drop-shadow-[0_0_40px_rgba(var(--primary-rgb),0.8)] scale-105" : "text-white"}`}>
               {currentQ.question}
             </h1>
           </motion.div>
         </AnimatePresence>
 
         {/* The Input Display */}
-        <div className={`w-full flex flex-col items-center justify-center transition-transform ${feedback === "incorrect" ? 'animate-shake' : ''}`}>
-          <div className="h-24 w-full flex items-center justify-center">
-            <span className={`text-[80px] font-mono font-bold leading-none transition-colors ${feedback === "correct" ? 'text-primary drop-shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]' : feedback === "incorrect" ? 'text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'text-zinc-400'}`}>
-              {currentInput || "_"}
+        <div className={`w-full flex flex-col items-center justify-center transition-transform mt-4 ${feedback === "incorrect" ? 'animate-shake' : ''}`}>
+          <div className="h-32 w-full flex items-center justify-center">
+            <span className={`text-[5rem] md:text-[8rem] font-mono font-bold leading-none transition-all duration-150 ${feedback === "correct" ? 'text-primary scale-110 drop-shadow-[0_0_40px_rgba(var(--primary-rgb),1)] opacity-0' : feedback === "incorrect" ? 'text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]' : 'text-zinc-300'}`}>
+              {currentInput || (
+                <span className="opacity-30 animate-pulse">_</span>
+              )}
             </span>
           </div>
         </div>

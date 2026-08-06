@@ -119,14 +119,21 @@ export default function SuddenDeathClient({
     handleInput(key);
   };
 
+  const [hasSaved, setHasSaved] = useState(false);
+
   useEffect(() => {
-    if (isGameOver && !isSaving) {
+    if (isGameOver && !hasSaved) {
+      setHasSaved(true);
       setIsSaving(true);
       saveSuddenDeath({ score, logs }).then(() => {
         setIsSaving(false);
+      }).catch((e) => {
+        console.error(e);
+        setIsSaving(false);
+        // We leave hasSaved as true to prevent retrying infinitely
       });
     }
-  }, [isGameOver, isSaving, score, logs]);
+  }, [isGameOver, hasSaved, score, logs]);
 
   if (isGameOver) {
     return (
@@ -143,9 +150,9 @@ export default function SuddenDeathClient({
 
             <div>
               <h2 className="text-3xl font-bold text-white mb-2">
-                {lives <= 0 ? "System Failure" : "Deck Exhausted"}
+                {lives <= 0 ? "Game Over" : "You Win!"}
               </h2>
-              <p className="text-zinc-400">Survival sequence terminated.</p>
+              <p className="text-zinc-400">Your final score has been saved.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

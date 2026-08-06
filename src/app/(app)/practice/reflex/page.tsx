@@ -63,8 +63,11 @@ async function ReflexData() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Games</h1>
-        <p className="text-zinc-400 text-lg">Train timed reasoning, mental math, and market intuition.</p>
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-bold uppercase tracking-wider mb-4">
+          Bootcamp Block: 10:30 AM - 11:30 AM
+        </div>
+        <h1 className="text-4xl font-black tracking-tighter text-white mb-2">Reflex Engine</h1>
+        <p className="text-zinc-400 text-lg">Drill mental math, sequence recognition, and cognitive speed under extreme pressure.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -134,23 +137,23 @@ async function ReflexData() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <GameCard
-          title="Daily Review"
-          description="Mental math. Under fire. Execute your scheduled spaced repetition cards."
+          title="Morning Drill"
+          description="Clear your daily Spaced Repetition queue. Mandatory for neural retention."
           href="/practice/reflex/session"
           icon={Calculator}
           colorTheme="primary"
-          badgeText="Core Engine"
-          difficulty="Beginner"
+          badgeText="Daily Required"
+          difficulty="Adaptive"
           metrics={[
-            { label: "Cards", value: pendingCount }
+            { label: "Pending", value: pendingCount }
           ]}
         />
 
         <GameCard
           title="Sudden Death"
-          description="Bet sizing the Kelly way. Make one mistake and the run is over. Test your limits."
+          description="One mistake and the run is over. Simulate interview pressure."
           href="/practice/reflex/sudden-death"
           icon={Zap}
           colorTheme="orange"
@@ -158,6 +161,19 @@ async function ReflexData() {
           difficulty="Expert"
           metrics={[
             { label: "Mode", value: "Infinite" }
+          ]}
+        />
+
+        <GameCard
+          title="Custom Skirmish"
+          description="Select specific operators, digit sizes, and constraints for targeted practice."
+          href="/practice/reflex/custom"
+          icon={Target}
+          colorTheme="blue"
+          badgeText="Sandbox"
+          difficulty="Custom"
+          metrics={[
+            { label: "Modifiers", value: "Unlocked" }
           ]}
         />
       </div>

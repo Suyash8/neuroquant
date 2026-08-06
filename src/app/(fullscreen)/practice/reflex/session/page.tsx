@@ -9,15 +9,20 @@ import { Suspense } from "react";
 import SessionLoading from "./loading";
 import { getUserLevel } from "@/utils/levelCalculator";
 
-export default function SessionPage() {
+export default async function SessionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const resolvedSearchParams = await searchParams;
   return (
     <Suspense fallback={<SessionLoading />}>
-      <SessionData />
+      <SessionData searchParams={resolvedSearchParams} />
     </Suspense>
   );
 }
 
-async function SessionData() {
+async function SessionData({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
   const supabase = await createClient();
   const { data: { user } } = await withPerf("Supabase Auth (getUser)", () => supabase.auth.getUser());
 
@@ -25,6 +30,57 @@ async function SessionData() {
     redirect("/login");
   }
 
+  const isCustom = searchParams.mode === "custom";
+
+  if (isCustom) {
+    // Custom Skirmish generation (purely transient)
+    const op = searchParams.op as string || "mixed";
+    const tierStr = searchParams.tier as string || "standard";
+    const durStr = searchParams.dur as string || "20";
+    
+    // Map tier to operation level approximations
+    let baseLevel = 5;
+    if (tierStr === "warmup") baseLevel = 1;
+    if (tierStr === "standard") baseLevel = 5;
+    if (tierStr === "hard") baseLevel = 8;
+    if (tierStr === "insane") baseLevel = 10;
+    
+    let duration = 20;
+    if (durStr === "50") duration = 50;
+    if (durStr === "100") duration = 100;
+    if (durStr === "endless") duration = 9999;
+    
+    const initialQuestions: ReflexQuestion[] = [];
+    for (let i = 0; i < duration; i++) {
+      // Pick operation based on op param
+      let currentOp = op;
+      if (op === "mixed") {
+        const ops = ["addition", "subtraction", "multiplication", "division"];
+        currentOp = ops[Math.floor(Math.random() * ops.length)];
+      }
+      
+      let levelToUse = baseLevel;
+      if (currentOp === "addition") levelToUse = baseLevel === 1 ? 1 : baseLevel === 5 ? 5 : 8;
+      if (currentOp === "subtraction") levelToUse = baseLevel === 1 ? 2 : baseLevel === 5 ? 6 : 9;
+      if (currentOp === "multiplication") levelToUse = baseLevel === 1 ? 3 : baseLevel === 5 ? 7 : 10;
+      if (currentOp === "division") levelToUse = 4; // Division is currently only lvl 4 in generator
+      
+      const q = generateMathQuestion(levelToUse as OperationLevel, true);
+      initialQuestions.push({
+        id: crypto.randomUUID(),
+        cardId: "custom-card",
+        question: q.question,
+        answer: q.answer,
+        ef: 2.5,
+        interval: 0,
+        consecutiveHit: 0
+      });
+    }
+    
+    return <SessionClient userId={user.id} initialQuestions={initialQuestions} isCustom={true} />;
+  }
+
+  // STANDARD DAILY REVIEW LOGIC
   const [profile, userSettings, rawPendingProgress] = await withPerf("Prisma: Fetch Initial Session Data", () => Promise.all([
     prisma.reflexProfile.findUnique({ where: { userId: user.id } }),
     prisma.userSettings.findUnique({ where: { userId: user.id } }),
@@ -46,7 +102,6 @@ async function SessionData() {
   const commutativity = userSettings?.commutativity ?? true;
   const dailyGoal = userSettings?.dailyGoal || 50;
 
-  // Limit the progress array in memory to the user's custom daily goal
   const pendingProgress = rawPendingProgress.slice(0, dailyGoal);
 
   let initialQuestions: ReflexQuestion[] = pendingProgress.map(p => ({
@@ -59,12 +114,10 @@ async function SessionData() {
     consecutiveHit: p.consecutiveHit
   }));
 
-  // If we don't have enough pending cards to fill a session (let's say 20 per session block)
   const SESSION_SIZE = 20;
   if (initialQuestions.length < SESSION_SIZE) {
     const cardsNeeded = SESSION_SIZE - initialQuestions.length;
     
-    // 1. Generate all new questions in memory
     const generatedQuestions = [];
     for (let i = 0; i < cardsNeeded; i++) {
       generatedQuestions.push(generateMathQuestion(operationLevel, commutativity));
@@ -72,17 +125,14 @@ async function SessionData() {
     
     const questionStrings = generatedQuestions.map(q => q.question);
 
-    // 2. Fetch existing cards in bulk
     const existingCards = await withPerf("Prisma: Fetch Existing Cards", () => prisma.reflexCard.findMany({
       where: { question: { in: questionStrings } }
     }));
 
     const existingQuestionStrings = new Set(existingCards.map(c => c.question));
     
-    // 3. Prepare missing cards for creation
     const missingCards = generatedQuestions.filter(q => !existingQuestionStrings.has(q.question));
     
-    // 4. Create missing cards in bulk and return them (skip duplicates just in case)
     let insertedCards: typeof existingCards = [];
     if (missingCards.length > 0) {
       insertedCards = await withPerf("Prisma: Create Missing Cards", () => prisma.reflexCard.createManyAndReturn({
@@ -96,16 +146,13 @@ async function SessionData() {
       }));
     }
 
-    // 5. Combine in memory instead of fetching again
     const finalCards = [...existingCards, ...insertedCards];
 
-    // Populate the queue
     for (const card of finalCards) {
-      // Don't add if already in initialQuestions (shouldn't happen since we subtracted cardsNeeded, but just in case)
       if (initialQuestions.find(iq => iq.cardId === card.id)) continue;
       
       initialQuestions.push({
-        id: crypto.randomUUID(), // transient ID for the store
+        id: crypto.randomUUID(),
         cardId: card.id,
         question: card.question,
         answer: card.answer,
@@ -118,5 +165,5 @@ async function SessionData() {
     }
   }
 
-  return <SessionClient userId={user.id} initialQuestions={initialQuestions} />;
+  return <SessionClient userId={user.id} initialQuestions={initialQuestions} isCustom={false} />;
 }

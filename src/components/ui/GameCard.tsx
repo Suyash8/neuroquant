@@ -11,7 +11,7 @@ interface GameCardProps {
   icon: LucideIcon;
   colorTheme?: "primary" | "orange" | "blue" | "purple";
   badgeText?: string;
-  difficulty?: "Beginner" | "Intermediate" | "Expert";
+  difficulty?: "Beginner" | "Intermediate" | "Expert" | "Adaptive" | "Custom";
   metrics?: { label: string; value: string | number }[];
   className?: string;
 }

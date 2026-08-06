@@ -29,9 +29,10 @@ interface ReflexSessionState {
   currentInput: string;
   startTime: number | null;
   logs: ReflexLog[];
+  isCustom: boolean;
   
   // Actions
-  startSession: (userId: string, questions: ReflexQuestion[]) => void;
+  startSession: (userId: string, questions: ReflexQuestion[], isCustom?: boolean) => void;
   endSession: () => Promise<void>;
   setInput: (input: string) => void;
   clearInput: () => void;
@@ -83,7 +84,9 @@ export const useReflexSessionStore = create<ReflexSessionState>((set, get) => ({
   startTime: null,
   logs: [],
 
-  startSession: (userId, questions) => {
+  isCustom: false,
+
+  startSession: (userId, questions, isCustom = false) => {
     set({
       userId,
       isActive: true,
@@ -92,14 +95,15 @@ export const useReflexSessionStore = create<ReflexSessionState>((set, get) => ({
       currentInput: "",
       startTime: performance.now(),
       logs: [],
+      isCustom,
     });
   },
 
   endSession: async () => {
-    const { userId, logs } = get();
+    const { userId, logs, isCustom } = get();
     set({ isActive: false, startTime: null });
 
-    if (userId && logs.length > 0) {
+    if (userId && logs.length > 0 && !isCustom) {
       // Fire and forget to prevent blocking the UI
       syncReflexSession({ logs }).catch(console.error);
     }
