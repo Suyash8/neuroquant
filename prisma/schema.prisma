@@ -25,11 +25,14 @@ model User {
   updatedAt         DateTime @updatedAt
   
   // Back-relations for Prisma
-  reflexProfile     ReflexProfile?
   settings          UserSettings?
   badges            UserBadge[]
-  diagnosticResults DiagnosticResult[]
   activities        UserActivity[]
+  
+  // New back-relations
+  bootcampDays      BootcampDay[]
+  cardProgress      UserCardProgress[]
+  reviewLogs        ReviewLog[]
 }
 
 model UserSettings {
@@ -39,6 +42,7 @@ model UserSettings {
   dailyGoal         Int     @default(50)
   soundEnabled      Boolean @default(true)
   hapticEnabled     Boolean @default(true)
+  leetcodeUsername  String? // Added for tracking DSA progress
   
   user              User    @relation(fields: [userId], references: [id])
 }
@@ -77,65 +81,83 @@ model UserActivity {
   @@unique([userId, date])
 }
 
-// 2. MODULE: REFLEX ENGINE
-// All settings specific to the Reflex module live here, keeping User clean.
-model ReflexProfile {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  horizon              String   @default("30_days") // Reflex-specific setting
-  moduleStreak         Int      @default(0)         // Streak just for this module
-  suddenDeathHighScore Int      @default(0)
-  
-  user              User                 @relation(fields: [userId], references: [id])
-  progress          UserReflexProgress[]
-  velocityLogs      ReflexVelocityLogs[]
-}
+// Removed old Reflex tables
+// ---------------------------------------------------------------------------
+// NEW UNIFIED 3NF ARCHITECTURE
+// ---------------------------------------------------------------------------
 
-model ReflexCard {
+// 1. BOOTCAMP TRACKING
+model BootcampDay {
   id          String   @id @default(uuid())
-  question    String   
-  answer      String   
-  category    String   
-  difficulty  Int      
-  progress    UserReflexProgress[]
+  userId      String
+  dayNumber   Int
+  date        DateTime?
+  status      String   @default("locked") // locked, in_progress, completed
+  createdAt   DateTime @default(now())
+  
+  tasks       BootcampTask[]
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId, dayNumber])
 }
 
-model UserReflexProgress {
+model BootcampTask {
+  id            String   @id @default(uuid())
+  bootcampDayId String
+  type          String   // dsa, math, theory, project, system_design
+  title         String
+  status        String   @default("pending") // pending, completed
+  details       Json?    // Stores prompt data, leetcode links, etc.
+  
+  day           BootcampDay @relation(fields: [bootcampDayId], references: [id], onDelete: Cascade)
+}
+
+// 2. UNIFIED KNOWLEDGE ENGINE
+model Deck {
+  id          String   @id @default(uuid())
+  slug        String   @unique // e.g. "math-addition", "cpp-pointers", "brainteasers"
+  name        String
+  type        String   // math, theory, brainteaser
+  
+  cards       Card[]
+}
+
+model Card {
+  id          String   @id @default(uuid())
+  deckId      String
+  front       String   // Question or prompt
+  back        String   // Answer
+  category    String?  // Sub-tag
+  difficulty  Int      // Relative difficulty scale
+  
+  deck        Deck     @relation(fields: [deckId], references: [id])
+  progress    UserCardProgress[]
+}
+
+model UserCardProgress {
   id              String   @id @default(uuid())
-  reflexProfileId String
+  userId          String
   cardId          String
+  
   ef              Float    @default(2.5)
   interval        Int      @default(0)
   consecutiveHit  Int      @default(0)
   nextReview      DateTime @default(now())
   
-  profile         ReflexProfile @relation(fields: [reflexProfileId], references: [id])
-  card            ReflexCard    @relation(fields: [cardId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+  card            Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
-  @@unique([reflexProfileId, cardId])
+  @@unique([userId, cardId])
 }
 
-model ReflexVelocityLogs {
-  id              String   @id @default(uuid())
-  reflexProfileId String
-  cardId          String
-  timeMs          Int      
-  quality         Int      
-  sessionMode     String   @default("review") // review, learn, sudden_death
-  createdAt       DateTime @default(now())
-
-  profile         ReflexProfile @relation(fields: [reflexProfileId], references: [id])
-}
-
-model DiagnosticResult {
-  id                   String   @id @default(uuid())
-  userId               String
-  score                Int      
-  maxDifficultyReached Int      
-  averageVelocityMs    Float    
-  accuracy             Float    
-  category             String   @default("multiplication")
-  createdAt            DateTime @default(now())
-
-  user                 User     @relation(fields: [userId], references: [id])
+model ReviewLog {
+  id          String   @id @default(uuid())
+  userId      String
+  cardId      String
+  timeMs      Int      
+  quality     Int      
+  sessionMode String   @default("review") // review, learn, sudden_death
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id])
 }
