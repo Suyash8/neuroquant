@@ -50,17 +50,6 @@ export async function completeOnboarding(payload: {
         },
       });
 
-      // 3. Upsert ReflexProfile
-      await tx.reflexProfile.upsert({
-        where: { userId: authUser.id },
-        create: {
-          userId: authUser.id,
-          horizon,
-        },
-        update: {
-          horizon,
-        },
-      });
     });
 
     return { success: true };

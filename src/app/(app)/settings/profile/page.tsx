@@ -26,7 +26,6 @@ export default async function ProfilePage() {
           badge: true,
         },
       },
-      reflexProfile: true,
     },
   });
 

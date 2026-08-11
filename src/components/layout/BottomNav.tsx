@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, LayoutDashboard, Trophy, Settings } from "lucide-react";
+import { Brain, LayoutDashboard, Settings, BookOpen, Terminal } from "lucide-react";
 
 const navItems = [
-  { name: "Home", href: "/", icon: LayoutDashboard },
-  { name: "Reflex", href: "/practice/reflex", icon: Brain },
-  { name: "Rank", href: "#", icon: Trophy },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Math", href: "/practice/math", icon: Brain },
+  { name: "Theory", href: "/practice/theory", icon: BookOpen },
+  { name: "Projects", href: "/projects", icon: Terminal },
 ];
 
 export function BottomNav() {

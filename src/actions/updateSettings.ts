@@ -9,6 +9,7 @@ interface UpdateSettingsPayload {
   dailyGoal: number;
   soundEnabled: boolean;
   hapticEnabled: boolean;
+  leetcodeUsername?: string | null;
 }
 
 export const updateSettings = withAuthAction<UpdateSettingsPayload, { success: boolean }>(
@@ -22,23 +23,14 @@ export const updateSettings = withAuthAction<UpdateSettingsPayload, { success: b
           dailyGoal: settings.dailyGoal,
           soundEnabled: settings.soundEnabled,
           hapticEnabled: settings.hapticEnabled,
+          leetcodeUsername: settings.leetcodeUsername,
         },
         update: {
           commutativity: settings.commutativity,
           dailyGoal: settings.dailyGoal,
           soundEnabled: settings.soundEnabled,
           hapticEnabled: settings.hapticEnabled,
-        }
-      });
-
-      await tx.reflexProfile.upsert({
-        where: { userId: user.id },
-        create: {
-          userId: user.id,
-          horizon: settings.horizon,
-        },
-        update: {
-          horizon: settings.horizon,
+          leetcodeUsername: settings.leetcodeUsername,
         }
       });
     });

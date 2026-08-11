@@ -14,15 +14,14 @@ export function Sidebar() {
 
   const globalItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Analytics", href: "/analytics", icon: Activity, locked: true },
-    { name: "Leaderboard", href: "/leaderboard", icon: Trophy, locked: true },
+    { name: "Stats", href: "/stats", icon: Activity, locked: false },
   ];
 
   const practiceItems = [
-    { name: "Games", href: "/practice/reflex", icon: Brain },
-    { name: "Training", href: "/training", icon: Activity, locked: true },
-    { name: "Study Plans", href: "/plans", icon: BookOpen, locked: true },
-    { name: "Topics", href: "/topics", icon: Users, locked: true },
+    { name: "Math", href: "/practice/math", icon: Brain },
+    { name: "Theory", href: "/practice/theory", icon: BookOpen },
+    { name: "Brainteasers", href: "/practice/brainteasers", icon: Users },
+    { name: "Projects", href: "/projects", icon: Trophy },
   ];
 
   const handleLogout = async () => {

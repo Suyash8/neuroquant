@@ -27,7 +27,6 @@ async function SettingsData() {
     where: { id: user.id },
     include: {
       settings: true,
-      reflexProfile: true,
     }
   }));
 
@@ -44,10 +43,11 @@ async function SettingsData() {
     email: dbUser.email,
     persona: dbUser.persona,
     commutativity: dbUser.settings?.commutativity ?? true,
-    horizon: dbUser.reflexProfile?.horizon || "30_days",
+    horizon: "60_days", // Hardcoded for bootcamp
     dailyGoal: dbUser.settings?.dailyGoal ?? 50,
     soundEnabled: dbUser.settings?.soundEnabled ?? true,
     hapticEnabled: dbUser.settings?.hapticEnabled ?? true,
+    leetcodeUsername: dbUser.settings?.leetcodeUsername || "",
   };
 
   return <SettingsClient initialSettings={initialSettings} />;

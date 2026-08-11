@@ -30,7 +30,6 @@ export default function ProfileClient({ user }: { user: any }) {
 
   const avgVelocity = user.averageVelocityMs ? Math.round(user.averageVelocityMs) : null;
   const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Recently";
-  const diagResult = (user.diagnosticResults && user.diagnosticResults.length > 0) ? user.diagnosticResults[0] : null;
 
   // Animation variants
   const stagger = {
@@ -215,31 +214,12 @@ export default function ProfileClient({ user }: { user: any }) {
               <Medal className="w-4 h-4 text-zinc-400" /> Baseline Metric
             </h3>
             
-            {diagResult ? (
-              <div className="space-y-6">
-                <div>
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Initial Score</div>
-                  <div className="text-4xl font-black text-white tracking-tighter">{diagResult.score}</div>
-                </div>
-                <div className="h-px w-full bg-gradient-to-r from-white/10 to-transparent" />
-                <div>
-                  <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Peak Difficulty</div>
-                  <div className="text-2xl font-black text-zinc-300 tracking-tight">Level {diagResult.maxDifficultyReached}</div>
-                </div>
+            <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-2">
+                <Target className="w-6 h-6 text-zinc-500" />
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-2">
-                  <Target className="w-6 h-6 text-zinc-500" />
-                </div>
-                <p className="text-sm text-zinc-400 font-medium">Calibrate your engine to establish a baseline.</p>
-                <Link href="/practice/diagnostic">
-                  <Button className="w-full">
-                    Run Diagnostic
-                  </Button>
-                </Link>
-              </div>
-            )}
+              <p className="text-sm text-zinc-400 font-medium">Diagnostic system is currently offline for upgrades.</p>
+            </div>
           </GlassPanel>
 
           {/* Achievements Vault */}
