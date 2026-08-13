@@ -9,6 +9,7 @@ import { PageContainer, PageHeader } from "@/components/layout/PageContainer";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import LeetCodeWidget from "@/components/dashboard/LeetCodeWidget";
 
 export default function DashboardPage() {
   return (
@@ -37,6 +38,7 @@ async function DashboardData() {
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
     include: {
+      settings: true,
       bootcampDays: {
         orderBy: { dayNumber: 'desc' },
         take: 1,
@@ -114,10 +116,11 @@ async function DashboardData() {
         </Card>
       </div>
 
-      <div className="space-y-4 mb-12">
-        <h3 className="text-lg font-bold text-white mb-4">The Schedule</h3>
-        
-        {BOOTCAMP_SCHEDULE.map((schedule, index) => {
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-lg font-bold text-white mb-4">The Schedule</h3>
+          
+          {BOOTCAMP_SCHEDULE.map((schedule, index) => {
           const task = currentDay.tasks.find(t => t.type === schedule.type);
           const isCompleted = task?.status === "completed";
           const Icon = schedule.icon;
@@ -156,6 +159,23 @@ async function DashboardData() {
             </Link>
           );
         })}
+        </div>
+
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold text-white mb-4">Integrations</h3>
+          
+          {/* LeetCode Widget */}
+          <div className="h-[180px]">
+            <Suspense fallback={<div className="h-full bg-zinc-900/50 rounded-xl animate-pulse" />}>
+              <LeetCodeWidget username={dbUser.settings?.leetcodeUsername} />
+            </Suspense>
+          </div>
+          
+          {/* AI Project Tracker Placeholder */}
+          <div className="h-[180px] bg-zinc-900/30 rounded-xl border border-dashed border-white/10 flex items-center justify-center text-zinc-500 text-sm font-bold">
+            Project Tracker Coming Soon
+          </div>
+        </div>
       </div>
     </PageContainer>
   );
