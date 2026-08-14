@@ -98,41 +98,37 @@ export default async function LeetCodeWidget({ username }: { username?: string |
   return (
     <Card className="bg-zinc-900/50 border-white/5 relative overflow-hidden h-full">
       <CardContent className="p-6 h-full flex flex-col justify-between">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-inner">
+        <div className="flex items-start justify-between mb-6 gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex shrink-0 items-center justify-center shadow-inner">
               <Code2 className="w-5 h-5 text-orange-500" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">LeetCode</h3>
-              <p className="text-white font-bold tracking-tight">@{username}</p>
+            <div className="min-w-0">
+              <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">LeetCode</h3>
+              <p className="text-sm text-white font-bold tracking-tight truncate">@{username}</p>
             </div>
           </div>
           
-          <div className="text-right">
-            <div className="flex items-center justify-end gap-1 text-zinc-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="text-right shrink-0">
+            <div className="flex items-center justify-end gap-1 text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
               <Trophy className="w-3 h-3" /> Rank
             </div>
-            <div className="text-lg font-black text-white">{ranking.toLocaleString()}</div>
+            <div className="text-sm font-black text-white">{ranking.toLocaleString()}</div>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
-          <div className="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-            <div className="text-xl font-black text-white">{all}</div>
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mt-1">Total</div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-[#00b8a3]/10 rounded-lg py-2 px-1 text-center border border-[#00b8a3]/20 flex flex-col justify-center">
+            <div className="text-base sm:text-lg font-black text-[#00b8a3]">{easy}</div>
+            <div className="text-[9px] font-bold text-[#00b8a3]/70 uppercase tracking-wider mt-0.5">Easy</div>
           </div>
-          <div className="bg-[#00b8a3]/10 rounded-lg p-3 text-center border border-[#00b8a3]/20">
-            <div className="text-xl font-black text-[#00b8a3]">{easy}</div>
-            <div className="text-[10px] font-bold text-[#00b8a3]/70 uppercase tracking-wider mt-1">Easy</div>
+          <div className="bg-[#ffc01e]/10 rounded-lg py-2 px-1 text-center border border-[#ffc01e]/20 flex flex-col justify-center">
+            <div className="text-base sm:text-lg font-black text-[#ffc01e]">{medium}</div>
+            <div className="text-[9px] font-bold text-[#ffc01e]/70 uppercase tracking-wider mt-0.5">Med</div>
           </div>
-          <div className="bg-[#ffc01e]/10 rounded-lg p-3 text-center border border-[#ffc01e]/20">
-            <div className="text-xl font-black text-[#ffc01e]">{medium}</div>
-            <div className="text-[10px] font-bold text-[#ffc01e]/70 uppercase tracking-wider mt-1">Med</div>
-          </div>
-          <div className="bg-[#ff375f]/10 rounded-lg p-3 text-center border border-[#ff375f]/20">
-            <div className="text-xl font-black text-[#ff375f]">{hard}</div>
-            <div className="text-[10px] font-bold text-[#ff375f]/70 uppercase tracking-wider mt-1">Hard</div>
+          <div className="bg-[#ff375f]/10 rounded-lg py-2 px-1 text-center border border-[#ff375f]/20 flex flex-col justify-center">
+            <div className="text-base sm:text-lg font-black text-[#ff375f]">{hard}</div>
+            <div className="text-[9px] font-bold text-[#ff375f]/70 uppercase tracking-wider mt-0.5">Hard</div>
           </div>
         </div>
       </CardContent>
