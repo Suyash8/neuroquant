@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import LeetCodeWidget from "@/components/dashboard/LeetCodeWidget";
+import ProjectTrackerWidget from "@/components/dashboard/ProjectTrackerWidget";
 
 export default function DashboardPage() {
   return (
@@ -171,9 +172,12 @@ async function DashboardData() {
             </Suspense>
           </div>
           
-          {/* AI Project Tracker Placeholder */}
-          <div className="h-[180px] bg-zinc-900/30 rounded-xl border border-dashed border-white/10 flex items-center justify-center text-zinc-500 text-sm font-bold">
-            Project Tracker Coming Soon
+          {/* AI Project Tracker */}
+          <div className="h-[300px]">
+            <ProjectTrackerWidget 
+              taskId={currentDay.tasks.find(t => t.type === 'project')?.id} 
+              initialDetails={currentDay.tasks.find(t => t.type === 'project')?.details} 
+            />
           </div>
         </div>
       </div>
