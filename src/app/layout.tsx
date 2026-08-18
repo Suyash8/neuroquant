@@ -1,20 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 import { StoreInitializer } from "@/components/StoreInitializer";
 import { createClient } from "@/utils/supabase/server";
 import prisma from "@/lib/prisma";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient();
@@ -74,7 +63,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased dark`}>
+    <html lang="en" className="h-full antialiased dark font-sans">
       <body className={`h-full flex overflow-hidden bg-background text-foreground ${activePersona}`}>
         <StoreInitializer user={globalUser} />
         
