@@ -1,9 +1,13 @@
 import GameEngine from "@/components/practice/GameEngine";
+import { getNextCards } from "@/actions/cards";
 
-export default function TheoryPracticePage() {
+export default async function TheoryPracticePage() {
+  const result = await getNextCards({ deckSlug: "theory", limit: 15 });
+  const initialData = "error" in result ? undefined : result;
+
   return (
     <div className="h-full pt-16 md:pt-0">
-      <GameEngine deckSlug="theory" />
+      <GameEngine deckSlug="theory" initialData={initialData} />
     </div>
   );
 }

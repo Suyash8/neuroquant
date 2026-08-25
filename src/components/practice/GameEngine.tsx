@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Loader2, Brain, CheckCircle2, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function GameEngine({ deckSlug }: { deckSlug: string }) {
-  const [cards, setCards] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function GameEngine({ deckSlug, initialData }: { deckSlug: string; initialData?: { cards: any[], type: string, deckName: string } }) {
+  const [cards, setCards] = useState<any[]>(initialData?.cards || []);
+  const [loading, setLoading] = useState(!initialData);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [deckType, setDeckType] = useState<string>("theory");
-  const [deckName, setDeckName] = useState<string>("");
+  const [deckType, setDeckType] = useState<string>(initialData?.type || "theory");
+  const [deckName, setDeckName] = useState<string>(initialData?.deckName || "");
   
   // Math specific
   const [mathInput, setMathInput] = useState("");
@@ -27,8 +27,10 @@ export default function GameEngine({ deckSlug }: { deckSlug: string }) {
   const [sessionComplete, setSessionComplete] = useState(false);
 
   useEffect(() => {
-    loadCards();
-  }, [deckSlug]);
+    if (!initialData) {
+      loadCards();
+    }
+  }, [deckSlug, initialData]);
 
   const loadCards = async () => {
     setLoading(true);
